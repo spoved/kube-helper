@@ -88,6 +88,18 @@ $ ./bin/kube-helper -n vault
 $ ./bin/kube-helper -g production -n vault
 ```
 
+### Order items are applied
+
+When using `--all` there is a default order top items are applied:
+
+- `helm` - Local helm repos are updated
+- `namespaces` - Namespaces are created/updated
+- `secrets`
+- `config_maps`
+- `apps`
+- `manifests`
+- `groups`
+
 ## Contributing
 
 1. Fork it (<https://github.com/spoved/kube-helper/fork>)

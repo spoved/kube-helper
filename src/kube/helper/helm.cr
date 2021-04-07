@@ -24,12 +24,16 @@ module Kube::Helper::Helm
   # Will update all helm repos
   def update_helm_repos
     logger.info { "updating helm repos" }
-
-    # Gather current repos
-    curr_repos = JSON.parse(`helm repo list -o json`)
     names = Array(String).new
-    curr_repos.as_a.each do |repo|
-      names << repo["name"].as_s
+
+    begin
+      # Gather current repos
+      curr_repos = JSON.parse(`helm repo list -o json`)
+      curr_repos.as_a.each do |repo|
+        names << repo["name"].as_s
+      end
+    rescue ex : JSON::ParseException
+      logger.warn { "unable to check current helm repos" }
     end
 
     config.helm.repos.each do |k, v|
