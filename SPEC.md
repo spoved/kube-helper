@@ -1,16 +1,18 @@
 # Deployment YAML File Specification
 
+[Full Example](#full-example)
+
 ## Top level members
 
-| key           | type          | description                           |
-| ------------- | ------------- | ------------------------------------- |
-| `helm`        | Object        | Object containing helm configurations |
-| `manifests`   | Array(String) | An array of strings of manifest paths |
-| `config_maps` | Array(Object) | An array of `ConfigMap` objects       |
-| `secrets`     | Array(Object) | An array of `Secret` objects          |
-| `namespaces`  | Array(Object) | An array of `Namespace` objects       |
-| `groups`      | Object        | A name to `Group` mapping             |
-| `apps`        | Array(Object) | An array of `Application` objects     |
+| key                                 | type          | description                                                         |
+| ----------------------------------- | ------------- | ------------------------------------------------------------------- |
+| [`helm`](#helm)                     | Object        | Object containing helm configurations                               |
+| [`manifests`](#configmap--secret)   | Array(String) | An array of strings of manifest paths                               |
+| [`config_maps`](#configmap--secret) | Array(Object) | An array of `ConfigMap` objects                                     |
+| [`secrets`](#configmap--secret)     | Array(Object) | An array of `Secret` objects                                        |
+| [`namespaces`](#namespace)          | Array(Object) | An array of `Namespace` objects                                     |
+| [`groups`](#group)                  | Object        | A name to [`Group`](#group-object-definition) mapping               |
+| [`apps`](#applications)             | Array(Object) | An array of [`Application`](#application-object-definition) objects |
 
 ```yaml
 helm: {}
