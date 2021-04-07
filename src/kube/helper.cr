@@ -178,9 +178,8 @@ class Kube::Helper
       check_namespaces if opt(:namespaces) || opt(:all)
       check_secrets if opt(:secrets) || opt(:all)
       check_config_maps if opt(:config_maps) || opt(:all)
-      check_apps if opt(:apps) || opt(:all)
       check_manifests if opt(:manifests) || opt(:all)
-
+      check_apps if opt(:apps) || opt(:all)
       check_groups if opt(:groups) || opt(:all)
 
       logger.info { "Done" }

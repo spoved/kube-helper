@@ -96,8 +96,8 @@ When using `--all` there is a default order top items are applied:
 - `namespaces` - Namespaces are created/updated
 - `secrets`
 - `config_maps`
-- `apps`
 - `manifests`
+- `apps`
 - `groups`
 
 For more granular control use `groups` or `apps` to define your application. They both support the `before` and `after` manifest lists to allow when you need a resource to be applied/created.
