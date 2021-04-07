@@ -20,7 +20,7 @@ shards build --ignore-crystal-version
 
 ## Usage
 
-```shell
+```text
 $ ./bin/kube-helper --help
 Usage: kube-helper [arguments]
 
@@ -30,7 +30,7 @@ Usage: kube-helper [arguments]
 Config Flags:
     -w DIR, --workdir DIR            Working directory. default: "./"
     -f FILE, --file FILE             Name of config file. default: deployment.yml
-    --kubeconfig FILE                Path to the kube config file. default: /Users/homans/.kube/config
+    --kubeconfig FILE                Path to the kube config file. default: ${HOME}/.kube/config
 
 Logging Flags:
     -q, --quiet                      Log errors only
