@@ -6,7 +6,7 @@ authors:
 
 targets:
   kube-helper:
-    main: src/kube-helper.cr
+    main: src/bin/kube-helper.cr
 
 crystal: ">= 0.36.1, < 2.0.0"
 
