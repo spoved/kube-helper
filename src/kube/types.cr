@@ -35,7 +35,7 @@ class Namespace
   include JSON::Serializable
   include YAML::Serializable
   property name : String
-  property project : String
+  property project : String = ""
   property istio : Bool = false
 
   def initialize(@name, @project);end
@@ -80,7 +80,6 @@ class Secret
   property namespace : String
   property envs : Array(Env) = Array(Env).new
   property files : Array(FileElement) = Array(FileElement).new
-
 end
 
 class Env
