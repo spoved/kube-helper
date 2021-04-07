@@ -100,6 +100,9 @@ When using `--all` there is a default order top items are applied:
 - `manifests`
 - `groups`
 
+For more granular control use `groups` or `apps` to define your application. They both support the `before` and `after` manifest lists to allow when you need a resource to be applied/created.
+When processing `groups` or `apps` it will process sub items in order (top to bottom).
+
 ## Contributing
 
 1. Fork it (<https://github.com/spoved/kube-helper/fork>)
