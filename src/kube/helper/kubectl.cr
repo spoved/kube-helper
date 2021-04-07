@@ -1,6 +1,14 @@
 module Kube::Helper::Kubectl
+  abstract def opt(key : Symbol) : Bool | String | Nil | Array(String)
+
+  private setter kubecmd : String? = nil
+
+  private def kubecmd
+    @kubecmd ||= "#{opt(:kube_bin)} --kubeconfig #{opt(:kube_config)}"
+  end
+
   def kubectl(args : Array(String), silent = false)
-    cmd = "#{KUBECMD} #{args.join(" ")}"
+    cmd = "#{self.kubecmd} #{args.join(" ")}"
 
     if silent
       system_cmd cmd
@@ -10,11 +18,11 @@ module Kube::Helper::Kubectl
   end
 
   def kubectl(*args)
-    run_cmd("#{KUBECMD} #{args.join(" ")}")
+    run_cmd("#{self.kubecmd} #{args.join(" ")}")
   end
 
   def kubectl?(*args)
-    system_cmd?("#{KUBECMD} #{args.join(" ")}")
+    system_cmd?("#{self.kubecmd} #{args.join(" ")}")
   end
 
   def apply_file(file)

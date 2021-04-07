@@ -5,6 +5,29 @@ require "spoved/system_cmd"
 require "./types"
 require "./helper/*"
 
+OPTIONS = Hash(Symbol, Bool | String | Nil | Array(String)){
+  :quiet       => false,
+  :verbose     => false,
+  :debug       => false,
+  :all         => false,
+  :manifests   => false,
+  :namespaces  => false,
+  :names       => Array(String).new,
+  :name_filter => false,
+  :secrets     => false,
+  :config_maps => false,
+  :apps        => false,
+  :delete      => false,
+  :groups      => false,
+  :group_names => Array(String).new,
+  :list        => false,
+  :workdir     => "./",
+  :config_file => "deployment.yml",
+  :kube_config => ENV.fetch("KUBECONFIG", File.join(Path.home, ".kube/config")),
+  :kube_bin    => "kubectl",
+  :helm_bin    => "helm",
+}
+
 class Kube::Helper
   ::Log.builder.clear
 
@@ -22,7 +45,9 @@ class Kube::Helper
 
   def initialize
     parse_args
-    config_file = File.join(OPTIONS[:workdir].as(String), "deployment.yml")
+
+    config_file = File.join(OPTIONS[:workdir].as(String), OPTIONS[:config_file].as(String))
+
     unless File.exists?(config_file)
       puts "ERROR: Config file #{config_file} does not exist"
       exit 1
@@ -58,11 +83,11 @@ class Kube::Helper
   end
 
   def get_path(sub_path)
-    File.join(WORKDIR, sub_path)
+    File.join(self.workdir, sub_path)
   end
 
-  ############
-  # OTHER
+  ########################
+  # Main run functions
 
   def check_manifests
     logger.info { "Checking manifests" }

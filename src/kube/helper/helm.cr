@@ -1,9 +1,16 @@
 module Kube::Helper::Helm
-  HELMCMD = "helm --kubeconfig #{KUBECONFIG}"
+  abstract def opt(key : Symbol) : Bool | String | Nil | Array(String)
+  abstract def workdir : String
+
+  private setter helmcmd : String? = nil
+
+  private def helmcmd
+    @helmcmd ||= "#{opt(:helm_bin)} --kubeconfig #{opt(:kube_config)}"
+  end
 
   # Run a helm command
   def helm(*args, namespace, silent = false, json = true)
-    cmd = "#{HELMCMD} --namespace #{namespace} "
+    cmd = "#{self.helmcmd} --namespace #{namespace} "
     cmd += " -o json " if json
     cmd += args.join(" ")
 
@@ -65,7 +72,7 @@ module Kube::Helper::Helm
         tempfile.delete unless tempfile.nil?
       end
     elsif !options.chart_path.nil?
-      yield File.join(WORKDIR, options.chart_path.not_nil!)
+      yield File.join(self.workdir, options.chart_path.not_nil!)
     else
       raise "No chart specified"
     end
@@ -74,7 +81,7 @@ module Kube::Helper::Helm
   # Build the helm values file and provide the path. If a file path is defined, will yield that back.
   def _helm_with_values(options)
     if !options.values.nil? && options.values.not_nil!.raw.is_a?(String)
-      path = File.join(WORKDIR, options.values.not_nil!.as_s)
+      path = File.join(self.workdir, options.values.not_nil!.as_s)
       raise "Unable to find values file #{options.values}" unless File.exists?(path)
       yield path
     else
@@ -95,13 +102,13 @@ module Kube::Helper::Helm
     logger.info { "#{mode} helm app: #{name}" }
 
     _helm_with_chart(options) do |chart|
-      unless options.values.nil?
+      if options.values.nil?
+        helm(mode, options.name, chart, namespace: options.namespace, json: false)
+      else
         _helm_with_values(options) do |values_path|
           create_ns(options.namespace)
           helm(mode, options.name, chart, "-f", values_path, namespace: options.namespace, json: false)
         end
-      else
-        helm(mode, options.name, chart, namespace: options.namespace, json: false)
       end
     end
   end
