@@ -158,8 +158,11 @@ apps:
   - name: minio-operator
     namespace: minio-operator
     secrets:
-      - name: MYKEY
-        value: value
+      - name: mysecret
+        namespace: minio-operator
+        envs:
+          - name: MYKEY
+            value: value
     manifests:
       # - https://raw.githubusercontent.com/minio/minio-operator/master/minio-operator.yaml
       - apps/operators/minio/operator.yml
@@ -268,8 +271,11 @@ apps:
   - name: minio-operator
     namespace: minio-operator
     secrets:
-      - name: MYKEY
-        value: value
+      - name: mysecret
+        namespace: minio-operator
+        envs:
+          - name: MYKEY
+            value: value
     manifests:
       # - https://raw.githubusercontent.com/minio/minio-operator/master/minio-operator.yaml
       - apps/operators/minio/operator.yml

@@ -64,13 +64,13 @@ module Kube::Helper::Kubectl
 
   def create_ns(ns : Namespace)
     create_ns(ns.name)
-
-    # Rancher project id
-    kubectl("annotate", "--overwrite", "namespace",
-      ns.name, "field.cattle.io/projectId=local:#{ns.project}")
-    kubectl("label", "--overwrite", "namespace",
-      ns.name, "field.cattle.io/projectId=#{ns.project}")
-
+    unless ns.project.nil?
+      # Rancher project id
+      kubectl("annotate", "--overwrite", "namespace",
+        ns.name, "field.cattle.io/projectId=local:#{ns.project.not_nil!}")
+      kubectl("label", "--overwrite", "namespace",
+        ns.name, "field.cattle.io/projectId=#{ns.project.not_nil!}")
+    end
     # istio-injection: enabled
     # kubectl label --overwrite pods foo status=unhealthy
     kubectl("label", "--overwrite", "namespace",

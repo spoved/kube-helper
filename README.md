@@ -20,6 +20,9 @@ shards build --ignore-crystal-version
 
 ## Usage
 
+To use `kube-helper` you need to create a `deployment.yml` definition. See the [SPEC.md](SPEC.md) for examples and definition.
+Command line help is available via the `--help` flag.
+
 ```text
 $ ./bin/kube-helper --help
 Usage: kube-helper [arguments]
@@ -55,6 +58,34 @@ Runtime Flags:
     --helm                           Update helm repos
   destructive actions:
     --delete                         Delete app manifests
+```
+
+You can verify and see your current deployments in a easy to read table with the `--list` flag.
+
+```text
+$ ./bin/kube-helper --list
+╭─────────────┬────────────────┬────────────────┬─────────╮
+│ Group       │ Name           │ Namespace      │ Ignored │
+├─────────────┼────────────────┼────────────────┼─────────┤
+│ production  │ sidekiq-web    │ production     │ false   │
+│ production  │ vault          │ production     │ false   │
+│ development │ sidekiq-web    │ development    │ false   │
+│ development │ vault          │ development    │ false   │
+│ ---         │ minio-operator │ minio-operator │ false   │
+╰─────────────┴────────────────┴────────────────┴─────────╯
+```
+
+Applying all configurations can be done with `--all` or select items can be selected for:
+
+```shell
+# Apply only items in the production group
+$ ./bin/kube-helper -g production
+
+# Apply only apps named vault
+$ ./bin/kube-helper -n vault
+
+# Apply only apps named vault in the group production
+$ ./bin/kube-helper -g production -n vault
 ```
 
 ## Contributing

@@ -153,7 +153,7 @@ class Kube::Helper
     self.config.apps.each do |app|
       data << ["---", app.name, app.ignore.to_s, app.namespace]
     end
-    pp data
+
     table = Tablo::Table.new(data, connectors: Tablo::CONNECTORS_SINGLE_ROUNDED) do |t|
       t.add_column("Group", &.[0])
       t.add_column("Name", &.[1])

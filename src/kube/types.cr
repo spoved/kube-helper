@@ -25,17 +25,15 @@ class Group
   property before : Array(String) = Array(String).new
   property after : Array(String) = Array(String).new
   property ignore : Bool = false
-
-  property project : String
+  property project : String? = nil
   property istio : Bool = false
-
 end
 
 class Namespace
   include JSON::Serializable
   include YAML::Serializable
   property name : String
-  property project : String = ""
+  property project : String? = nil
   property istio : Bool = false
 
   def initialize(@name, @project);end
