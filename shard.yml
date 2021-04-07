@@ -1,0 +1,19 @@
+name: kube-helper
+version: 0.1.0
+
+authors:
+  - Holden Omans <holden.omans@gmail.com>
+
+targets:
+  kube-helper:
+    main: src/kube-helper.cr
+
+crystal: ">= 0.36.1, < 2.0.0"
+
+license: MIT
+
+dependencies:
+  spoved:
+    github: spoved/spoved.cr
+  tablo:
+    github: hutou/tablo
