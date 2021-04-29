@@ -9,9 +9,11 @@ module Kube::Helper::Helm
   end
 
   # Run a helm command
-  def helm(*args, namespace, silent = false, json = true)
+  def helm(*args, namespace, silent = false, json = true, version : String? = nil)
     cmd = "#{self.helmcmd} --namespace #{namespace} "
     cmd += " -o json " if json
+    cmd += " --version #{version} " unless version.nil?
+
     cmd += args.join(" ")
 
     if silent
@@ -102,16 +104,26 @@ module Kube::Helper::Helm
     end
   end
 
-  def _run_helm(mode, name, options)
+  def _run_helm(mode, name, options : AppOptions)
     logger.info { "#{mode} helm app: #{name}" }
 
     _helm_with_chart(options) do |chart|
       if options.values.nil?
-        helm(mode, options.name, chart, namespace: options.namespace, json: false)
+        helm(
+          mode, options.name, chart, "--create-namespace",
+          namespace: options.namespace,
+          json: false,
+          version: options.version,
+        )
       else
         _helm_with_values(options) do |values_path|
-          create_ns(options.namespace)
-          helm(mode, options.name, chart, "-f", values_path, namespace: options.namespace, json: false)
+          helm(
+            mode, options.name, chart, "--create-namespace",
+            "-f", values_path,
+            namespace: options.namespace,
+            json: false,
+            version: options.version,
+          )
         end
       end
     end

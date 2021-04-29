@@ -42,6 +42,8 @@ module Kube::Helper::Kubectl
   end
 
   def apply_manifest(path : String, namespace : String)
+    return apply_manifest(path) if /^http/ === path
+
     server_side = File.size(path) > 262144
 
     if opt(:delete)

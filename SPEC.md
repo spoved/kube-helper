@@ -4,15 +4,15 @@
 
 ## Top level members
 
-| key                                 | type          | description                                                         |
-| ----------------------------------- | ------------- | ------------------------------------------------------------------- |
-| [`helm`](#helm)                     | Object        | Object containing helm configurations                               |
-| [`manifests`](#configmap--secret)   | Array(String) | An array of strings of manifest paths                               |
-| [`config_maps`](#configmap--secret) | Array(Object) | An array of `ConfigMap` objects                                     |
-| [`secrets`](#configmap--secret)     | Array(Object) | An array of `Secret` objects                                        |
-| [`namespaces`](#namespace)          | Array(Object) | An array of `Namespace` objects                                     |
-| [`groups`](#group)                  | Object        | A name to [`Group`](#group-object-definition) mapping               |
-| [`apps`](#applications)             | Array(Object) | An array of [`Application`](#application-object-definition) objects |
+| key                                 | type               | description                                                         |
+| ----------------------------------- | ------------------ | ------------------------------------------------------------------- |
+| [`helm`](#helm)                     | Object             | Object containing helm configurations                               |
+| [`manifests`](#configmap--secret)   | Array(String)      | An array of strings of manifest paths                               |
+| [`config_maps`](#configmap--secret) | Array(Object)      | An array of `ConfigMap` objects                                     |
+| [`secrets`](#configmap--secret)     | Array(Object)      | An array of `Secret` objects                                        |
+| [`namespaces`](#namespace)          | Array(Object)      | An array of `Namespace` objects                                     |
+| [`groups`](#group)                  | Array(GroupObject) | A list of [`Group`](#group-object-definition) objects               |
+| [`apps`](#applications)             | Array(Object)      | An array of [`Application`](#application-object-definition) objects |
 
 ```yaml
 helm: {}
@@ -111,6 +111,7 @@ A `Application` object defines a helm chart instalation or a logical grouping of
 | `after`       | Array(String)      | false    | Same as `manifests` but will be applied last                                        |
 | `chart_path`  | String             | false    | This can be a local path to a helm directory or tar file.                           |
 | `chart_url`   | String             | false    | This can be a http url to a helm tar file                                           |
+| `version`     | String             | false    | The chart version to specify                                                        |
 | `values`      | (String \| Object) | false    | This can be a path to a file to be used as a values.yml or the raw yaml data itself |
 | `ignored`     | Bool               | false    | If set to true, it and all sub resources will be ignored by the tool                |
 
@@ -176,14 +177,16 @@ A `Group` object is a logical grouping of `apps` other resources for oganization
 
 #### Group Object Definition
 
-| name          | type               | required | description                                                          |
-| ------------- | ------------------ | -------- | -------------------------------------------------------------------- |
-| `config_maps` | Array(Object)      | false    | An array of `ConfigMap` objects                                      |
-| `secrets`     | Array(Object)      | false    | An array of `Secret` objects                                         |
-| `before`      | Array(String)      | false    | Same as `manifests` but will be applied before children              |
-| `after`       | Array(String)      | false    | Same as `manifests` but will be applied after children               |
-| `ignored`     | Bool               | false    | If set to true, it and all sub resources will be ignored by the tool |
-| `apps`        | Array(Application) | false    | An array of `Application` objects                                    |
+| name                | type               | required | description                                                          |
+| ------------------- | ------------------ | -------- | -------------------------------------------------------------------- |
+| `name`              | String             | true     | Name of the group                                                    |
+| `default_namespace` | String             | false    | The default namespace to use for sub resources                       |
+| `config_maps`       | Array(Object)      | false    | An array of `ConfigMap` objects                                      |
+| `secrets`           | Array(Object)      | false    | An array of `Secret` objects                                         |
+| `before`            | Array(String)      | false    | Same as `manifests` but will be applied before children              |
+| `after`             | Array(String)      | false    | Same as `manifests` but will be applied after children               |
+| `ignored`           | Bool               | false    | If set to true, it and all sub resources will be ignored by the tool |
+| `apps`              | Array(Application) | false    | An array of `Application` objects                                    |
 
 ```yaml
 groups:

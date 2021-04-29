@@ -132,26 +132,31 @@ class Kube::Helper
   end
 
   def check_groups
-    config.groups.each do |name, group|
+    config.groups.each do |group|
       if !group_names.empty?
-        next unless group_names.includes?(name)
-        apply_group(name, group)
+        next unless group_names.includes?(group.name)
+        apply_group(group)
       else
-        apply_group(name, group)
+        apply_group(group)
       end
     end
   end
 
   def list_apps
     data = Array(Array(String)).new
-    self.config.groups.each do |name, group|
-      group.apps.each do |app|
-        data << [name, app.name, (group.ignore || app.ignore).to_s, app.namespace]
-      end
+    filler = "---"
+
+    # List top level apps
+    self.config.apps.each do |app|
+      data << [filler, app.name, app.ignore.to_s, app.namespace]
     end
 
-    self.config.apps.each do |app|
-      data << ["---", app.name, app.ignore.to_s, app.namespace]
+    # List groups and group apps
+    self.config.groups.each do |group|
+      data << [group.name, filler, group.ignore.to_s, group.namespace.name]
+      group.apps.each do |app|
+        data << [group.name, app.name, (group.ignore || app.ignore).to_s, app.namespace]
+      end
     end
 
     table = Tablo::Table.new(data, connectors: Tablo::CONNECTORS_SINGLE_ROUNDED) do |t|
@@ -172,6 +177,12 @@ class Kube::Helper
       list_apps if opt(:list)
 
       logger.info { "Start" }
+
+      context = config.context
+      if context
+        logger.info { "setting context #{context}" }
+        kubectl("config", "use-context", context)
+      end
 
       update_helm_repos if opt(:helm_repos)
 
