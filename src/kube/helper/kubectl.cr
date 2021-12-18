@@ -38,13 +38,13 @@ module Kube::Helper::Kubectl
 
   private def apply_server_side(path)
     server_side = File.size(path) > 262144
-    "--server-side=#{server_side.to_s}"
+    "--server-side=#{server_side}"
   end
 
   def apply_manifest(path : String, namespace : String)
     return apply_manifest(path) if /^http/ === path
 
-    server_side = File.size(path) > 262144
+    # server_side = File.size(path) > 262144
 
     if opt(:delete)
       logger.warn { "deleting #{path}" }
