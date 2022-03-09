@@ -38,7 +38,7 @@ module Kube::Helper::Group
     unless group.apps.empty?
       logger.info { "group: #{name} - applying apps" }
       group.apps.each do |app|
-        ns = Namespace.new(app.namespace, group.project)
+        ns = Namespace.new(app.namespace!, group.project)
         create_ns(ns)
         apply_app(app)
       end

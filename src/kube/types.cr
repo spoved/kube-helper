@@ -58,7 +58,6 @@ class Helm
   def initialize; end
 end
 
-alias Apps=Hash(String, AppOptions)
 alias Values=YAML::Any
 alias Repos=Hash(String, String)
 
@@ -67,11 +66,12 @@ class AppOptions
   include YAML::Serializable
 
   property name : String
-  property chart : String?
-  property chart_url : String?
-  property chart_path : String?
-  property version : String?
-  property namespace : String
+  property kustomize : String? = nil
+  property chart : String? = nil
+  property chart_url : String? = nil
+  property chart_path : String? = nil
+  property version : String? = nil
+  property namespace : String? = nil
   property values : Values? = nil
   property secrets : Array(Secret) = Array(Secret).new
   property config_maps : Array(Secret) = Array(Secret).new
@@ -79,8 +79,11 @@ class AppOptions
   property manifests : Array(String) = Array(String).new
   property before : Array(String) = Array(String).new
   property after : Array(String) = Array(String).new
-
   property ignore : Bool = false
+
+  def namespace!
+    self.namespace.not_nil!
+  end
 end
 
 class Secret

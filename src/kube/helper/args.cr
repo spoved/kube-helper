@@ -26,6 +26,8 @@ module Kube::Helper::Args
       parser.on("-w DIR", "--workdir DIR", "Working directory. default: \"./\"") { |dir| OPTIONS[:workdir] = File.expand_path(dir) }
       parser.on("-f FILE", "--file FILE", "Name of config file. default: deployment.yml") { |file| OPTIONS[:config_file] = file }
       parser.on("--kubeconfig FILE", "Path to the kube config file. default: #{OPTIONS[:kube_config]}") { |file| OPTIONS[:kube_config] = file }
+      parser.on("--context CONTEXT", "The name of the kubeconfig context to use. " \
+                                     "NOTE: this will override context in config file") { |file| OPTIONS[:context] = file }
 
       parser.separator
       parser.separator("Logging Flags:")

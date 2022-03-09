@@ -1,11 +1,12 @@
 module Kube::Helper::Helm
   abstract def opt(key : Symbol) : Bool | String | Nil | Array(String)
   abstract def workdir : String
+  abstract def kube_context : String?
 
   private setter helmcmd : String? = nil
 
   private def helmcmd
-    @helmcmd ||= "#{opt(:helm_bin)} --kubeconfig #{opt(:kube_config)}"
+    @helmcmd ||= "#{opt(:helm_bin)} --kubeconfig #{opt(:kube_config)}" + (kube_context ? " --context #{kube_context}" : "")
   end
 
   # Run a helm command

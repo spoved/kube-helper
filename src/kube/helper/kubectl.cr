@@ -1,10 +1,11 @@
 module Kube::Helper::Kubectl
   abstract def opt(key : Symbol) : Bool | String | Nil | Array(String)
+  abstract def kube_context : String?
 
   private setter kubecmd : String? = nil
 
   private def kubecmd
-    @kubecmd ||= "#{opt(:kube_bin)} --kubeconfig #{opt(:kube_config)}"
+    @kubecmd ||= "#{opt(:kube_bin)} --kubeconfig #{opt(:kube_config)}" + (kube_context ? " --context #{kube_context}" : "")
   end
 
   def kubectl(args : Array(String), silent = false)

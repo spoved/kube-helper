@@ -26,6 +26,7 @@ OPTIONS = Hash(Symbol, Bool | String | Nil | Array(String)){
   :kube_config => ENV.fetch("KUBECONFIG", File.join(Path.home, ".kube/config")),
   :kube_bin    => "kubectl",
   :helm_bin    => "helm",
+  :context     => nil,
 }
 
 class Kube::Helper
@@ -54,6 +55,11 @@ class Kube::Helper
     end
 
     @config = Config.from_yaml(File.read(config_file))
+    @config.groups.each do |group|
+      group.apps.each do |app|
+        app.namespace = group.namespace.name if app.namespace.nil?
+      end
+    end
   end
 
   def opts
@@ -70,6 +76,10 @@ class Kube::Helper
 
   def group_names
     OPTIONS[:group_names].as(Array(String))
+  end
+
+  def kube_context : String?
+    (opt(:context) || @config.context).as(String?)
   end
 
   def config
@@ -148,14 +158,19 @@ class Kube::Helper
 
     # List top level apps
     self.config.apps.each do |app|
-      data << [filler, app.name, app.ignore.to_s, app.namespace]
+      if app.namespace.nil?
+        raise "Namespace is required for apps defined on top level"
+      end
+
+      data << [filler, app.name, app.ignore.to_s, app.namespace.not_nil!]
     end
 
     # List groups and group apps
     self.config.groups.each do |group|
       data << [group.name, filler, group.ignore.to_s, group.namespace.name]
       group.apps.each do |app|
-        data << [group.name, app.name, (group.ignore || app.ignore).to_s, app.namespace]
+        ns = app.namespace!
+        data << [group.name, app.name, (group.ignore || app.ignore).to_s, ns]
       end
     end
 
