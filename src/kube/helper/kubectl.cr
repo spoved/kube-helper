@@ -1,3 +1,5 @@
+require "http/client"
+
 module Kube::Helper::Kubectl
   abstract def opt(key : Symbol) : Bool | String | Nil | Array(String)
   abstract def kube_context : String?
@@ -26,12 +28,13 @@ module Kube::Helper::Kubectl
     system_cmd?("#{self.kubecmd} #{args.join(" ")}")
   end
 
-  def apply_file(file)
+  def apply_file(file, ks_path : String)
     path = File.exists?(file) ? file : get_path(file)
 
     if File.exists?(path)
       logger.debug { "applying #{file}" }
-      kubectl "apply", apply_server_side(path), "-f", path
+      FileUtils.cp(path, File.join(ks_path, "all.yaml"))
+      kubectl "apply", apply_server_side(path), "-k", ks_path
     else
       logger.error { "cannot find #{file}" }
     end
@@ -42,26 +45,40 @@ module Kube::Helper::Kubectl
     "--server-side=#{server_side}"
   end
 
-  def apply_manifest(path : String, namespace : String)
-    return apply_manifest(path) if /^http/ === path
-
+  def apply_manifest(path : String, namespace : String, ks_path : String)
+    return apply_manifest(path, ks_path) if /^http/ === path
     # server_side = File.size(path) > 262144
 
+    FileUtils.cp(path, File.join(ks_path, "all.yaml"))
     if opt(:delete)
       logger.warn { "deleting #{path}" }
-      kubectl "delete", "-n", namespace, "-f", path
+      kubectl "delete", "-n", namespace, "-k", ks_path
     else
       logger.debug { "applying #{path}" }
-      kubectl "apply", "-n", namespace, apply_server_side(path), "-f", path
+      kubectl "apply", "-n", namespace, apply_server_side(path), "-k", ks_path
     end
   end
 
-  def apply_manifest(path : String)
+  def apply_manifest(path : String, ks_path : String)
     if /^http/ === path
       logger.debug { "applying #{path}" }
-      kubectl "apply", "-f", path
+      begin
+        file = ks_path ? File.open(File.join(ks_path, "all.yaml"), "w") : File.tempfile
+        HTTP::Client.get(path) do |response|
+          if response.success?
+            IO.copy(response.body_io, file)
+          else
+            logger.error { "cannot get #{path}" }
+          end
+        end
+      rescue ex
+        raise ex
+      ensure
+        file.try &.close
+      end
+      kubectl "apply", "-k", ks_path
     else
-      apply_file(path)
+      apply_file(path, ks_path)
     end
   end
 

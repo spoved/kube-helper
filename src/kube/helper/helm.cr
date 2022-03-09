@@ -6,16 +6,20 @@ module Kube::Helper::Helm
   private setter helmcmd : String? = nil
 
   private def helmcmd
-    @helmcmd ||= "#{opt(:helm_bin)} --kubeconfig #{opt(:kube_config)}" + (kube_context ? " --context #{kube_context}" : "")
+    @helmcmd ||= "#{opt(:helm_bin)} --kubeconfig #{opt(:kube_config)}" + (kube_context ? " --kube-context #{kube_context}" : "")
   end
 
   # Run a helm command
-  def helm(*args, namespace, silent = false, json = true, version : String? = nil)
+  def helm(*args, namespace, silent = false, json = true, version : String? = nil, ks_path : String? = nil)
     cmd = "#{self.helmcmd} --namespace #{namespace} "
     cmd += " -o json " if json
     cmd += " --version #{version} " unless version.nil?
 
     cmd += args.join(" ")
+
+    if ks_path
+      cmd += " --post-renderer #{File.join(ks_path, "kustomize")}"
+    end
 
     if silent
       system_cmd cmd
@@ -105,25 +109,27 @@ module Kube::Helper::Helm
     end
   end
 
-  def _run_helm(mode, name, options : AppOptions)
-    logger.info { "#{mode} helm app: #{name}" }
+  def _run_helm(name, options : AppOptions, ks_path : String? = nil)
+    logger.info { "helm app: #{name}" }
 
     _helm_with_chart(options) do |chart|
       if options.values.nil?
         helm(
-          mode, options.name, chart, "--create-namespace",
+          "upgrade", "--install", options.name, chart, "--create-namespace",
           namespace: options.namespace,
           json: false,
           version: options.version,
+          ks_path: ks_path,
         )
       else
         _helm_with_values(options) do |values_path|
           helm(
-            mode, options.name, chart, "--create-namespace",
+            "upgrade", "--install", options.name, chart, "--create-namespace",
             "-f", values_path,
             namespace: options.namespace,
             json: false,
             version: options.version,
+            ks_path: ks_path,
           )
         end
       end

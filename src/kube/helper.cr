@@ -99,10 +99,10 @@ class Kube::Helper
   ########################
   # Main run functions
 
-  def check_manifests
+  def check_manifests(ks_path : String)
     logger.info { "Checking manifests" }
     config.manifests.each do |m|
-      apply_manifest m
+      apply_manifest m, ks_path
     end
   end
 
@@ -125,19 +125,19 @@ class Kube::Helper
     end
   end
 
-  def check_config_maps
+  def check_config_maps(ks_path : String)
     return if config.config_maps.empty?
     logger.info { "Applying ConfigMaps" }
     config.config_maps.each do |s|
-      apply_configmap s
+      apply_configmap s, ks_path
     end
   end
 
-  def check_secrets
+  def check_secrets(ks_path : String)
     return if config.secrets.empty?
     logger.info { "Applying Secrets" }
     config.secrets.each do |s|
-      apply_secret s
+      apply_secret s, ks_path
     end
   end
 
@@ -201,13 +201,15 @@ class Kube::Helper
 
       update_helm_repos if opt(:helm_repos)
 
-      check_namespaces if opt(:namespaces) || opt(:all)
-      check_secrets if opt(:secrets) || opt(:all)
-      check_config_maps if opt(:config_maps) || opt(:all)
-      check_manifests if opt(:manifests) || opt(:all)
-      check_apps if opt(:apps) || opt(:all)
-      check_groups if opt(:groups) || opt(:all)
-
+      ks = Kube::Helper::Kustomize.build_kustomization(nil, "root")
+      Kube::Helper::Kustomize.with_kustomize(ks) do |ks_path|
+        check_namespaces if opt(:namespaces) || opt(:all)
+        check_secrets(ks_path) if opt(:secrets) || opt(:all)
+        check_config_maps(ks_path) if opt(:config_maps) || opt(:all)
+        check_manifests(ks_path) if opt(:manifests) || opt(:all)
+        check_apps if opt(:apps) || opt(:all)
+        check_groups if opt(:groups) || opt(:all)
+      end
       logger.info { "Done" }
     end
   end

@@ -1,16 +1,16 @@
 module Kube::Helper::Secrets
-  def apply_secret(secret : Secret)
+  def apply_secret(secret : Secret, ks_path : String)
     logger.debug { "Applying Secret: #{secret.name} namespace: #{secret.namespace}" }
     # create secret generic -n vault vault --from-file=config -o yaml --dry-run=client
     args = %w(create secret generic)
     build_secret_args(secret, args)
 
     with_kube_template_file(args) do |path|
-      apply_file(path)
+      apply_file(path, ks_path: ks_path)
     end
   end
 
-  def apply_configmap(secret : Secret)
+  def apply_configmap(secret : Secret, ks_path : String)
     logger.debug { "Applying ConfigMap: #{secret.name} namespace: #{secret.namespace}" }
 
     # create secret generic -n vault vault --from-file=config -o yaml --dry-run=client
@@ -18,7 +18,7 @@ module Kube::Helper::Secrets
     build_secret_args(secret, args)
 
     with_kube_template_file(args) do |path|
-      apply_file(path)
+      apply_file(path, ks_path: ks_path)
     end
   end
 
@@ -54,7 +54,7 @@ module Kube::Helper::Secrets
 
   def build_secret_args(secret, args)
     args << "-n"
-    args << secret.namespace
+    args << secret.namespace!
     args << secret.name
 
     unless secret.envs.empty?

@@ -91,9 +91,13 @@ class Secret
   include YAML::Serializable
 
   property name : String
-  property namespace : String
+  property namespace : String? = nil
   property envs : Array(Env) = Array(Env).new
   property files : Array(FileElement) = Array(FileElement).new
+
+  def namespace!
+    self.namespace.not_nil!
+  end
 end
 
 class Env

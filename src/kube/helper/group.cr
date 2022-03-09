@@ -15,39 +15,49 @@ module Kube::Helper::Group
     logger.info { "group: #{name} - checking namespace" }
     create_ns(namespace)
 
-    unless group.secrets.empty?
-      logger.info { "group: #{name} - applying secrets" }
-      group.secrets.each do |secret|
-        apply_secret(secret)
-      end
+    group.config_maps.each do |s|
+      s.namespace = group.namespace.name if s.namespace.nil?
     end
 
-    unless group.config_maps.empty?
-      logger.info { "group: #{name} - applying config maps" }
-      group.config_maps.each do |config_map|
-        apply_configmap(config_map)
-      end
-    end
-    unless group.before.empty?
-      logger.info { "group: #{name} - applying manifests listed in before" }
-      group.before.each do |file|
-        apply_manifest(file, namespace.name)
-      end
+    group.secrets.each do |s|
+      s.namespace = group.namespace.name if s.namespace.nil?
     end
 
-    unless group.apps.empty?
-      logger.info { "group: #{name} - applying apps" }
-      group.apps.each do |app|
-        ns = Namespace.new(app.namespace!, group.project)
-        create_ns(ns)
-        apply_app(app)
+    ks = Kube::Helper::Kustomize.build_kustomization(nil, group.name)
+    Kube::Helper::Kustomize.with_kustomize(ks) do |ks_path|
+      unless group.secrets.empty?
+        logger.info { "group: #{name} - applying secrets" }
+        group.secrets.each do |secret|
+          apply_secret(secret, ks_path)
+        end
       end
-    end
 
-    unless group.after.empty?
-      logger.info { "group: #{name} - applying manifests listed in after" }
-      group.after.each do |file|
-        apply_manifest(file, namespace.name)
+      unless group.config_maps.empty?
+        logger.info { "group: #{name} - applying config maps" }
+        group.config_maps.each do |config_map|
+          apply_configmap(config_map, ks_path)
+        end
+      end
+
+      unless group.before.empty?
+        logger.info { "group: #{name} - applying manifests listed in before" }
+        group.before.each do |file|
+          apply_manifest(file, namespace.name, ks_path)
+        end
+      end
+
+      unless group.apps.empty?
+        logger.info { "group: #{name} - applying apps" }
+        group.apps.each do |app|
+          apply_app(app, name)
+        end
+      end
+
+      unless group.after.empty?
+        logger.info { "group: #{name} - applying manifests listed in after" }
+        group.after.each do |file|
+          apply_manifest(file, namespace.name, ks_path)
+        end
       end
     end
   end
