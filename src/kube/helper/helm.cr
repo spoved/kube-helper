@@ -3,28 +3,36 @@ module Kube::Helper::Helm
   abstract def workdir : String
   abstract def kube_context : String?
 
-  private setter helmcmd : String? = nil
+  private setter helm_args : Array(String)? = nil
 
-  private def helmcmd
-    @helmcmd ||= "#{opt(:helm_bin)} --kubeconfig #{opt(:kube_config)}" + (kube_context ? " --kube-context #{kube_context}" : "")
+  private def helmcmd : String
+    opt(:helm_bin).as(String)
+  end
+
+  private def helm_args
+    @helm_args ||= (kube_context ? ["--kubeconfig", opt(:kube_config).as(String), "--context", kube_context.not_nil!] : ["--kubeconfig", opt(:kube_config).as(String)])
   end
 
   # Run a helm command
-  def helm(*args, namespace, silent = false, json = true, version : String? = nil, ks_path : String? = nil)
-    cmd = "#{self.helmcmd} --namespace #{namespace} "
-    cmd += " -o json " if json
-    cmd += " --version #{version} " unless version.nil?
+  def helm(*_args, namespace, silent : Bool = false, json : Bool = true, version : String? = nil, ks_path : String? = nil)
+    args = _args.to_a
+    args << "--namespace" << namespace
+    args << "-o" << "json" if json
+    args << "--version" << version unless version.nil?
 
-    cmd += args.join(" ")
+    # cmd = "#{self.helmcmd} --namespace #{namespace} "
+    # cmd += " -o json " if json
+    # cmd += " --version #{version} " unless version.nil?
+    # cmd += args.join(" ")
 
     if ks_path
-      cmd += " --post-renderer #{File.join(ks_path, "kustomize")}"
+      args << "--post-renderer" << File.join(ks_path, "kustomize")
     end
 
     if silent
-      system_cmd cmd
+      system_cmd helmcmd, args
     else
-      run_cmd(cmd)
+      run_cmd(helmcmd, args)
     end
   end
 
@@ -46,12 +54,11 @@ module Kube::Helper::Helm
     config.helm.repos.each do |k, v|
       # If its missing add it
       unless names.includes?(k)
-        cmd = "helm repo add #{k} #{v}"
-        run_cmd(cmd)
+        run_cmd(helmcmd, ["repo", "add", k, v])
       end
     end
 
-    run_cmd("helm repo update")
+    run_cmd(helmcmd, ["repo", "update"])
   end
 
   # check to see if a helm chart is installed
@@ -116,7 +123,7 @@ module Kube::Helper::Helm
       if options.values.nil?
         helm(
           "upgrade", "--install", options.name, chart, "--create-namespace",
-          namespace: options.namespace,
+          namespace: options.namespace!,
           json: false,
           version: options.version,
           ks_path: ks_path,
@@ -126,7 +133,7 @@ module Kube::Helper::Helm
           helm(
             "upgrade", "--install", options.name, chart, "--create-namespace",
             "-f", values_path,
-            namespace: options.namespace,
+            namespace: options.namespace!,
             json: false,
             version: options.version,
             ks_path: ks_path,

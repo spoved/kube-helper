@@ -1,31 +1,34 @@
 require "http/client"
+require "halite"
 
 module Kube::Helper::Kubectl
   abstract def opt(key : Symbol) : Bool | String | Nil | Array(String)
   abstract def kube_context : String?
 
-  private setter kubecmd : String? = nil
+  private setter kube_args : Array(String)? = nil
 
-  private def kubecmd
-    @kubecmd ||= "#{opt(:kube_bin)} --kubeconfig #{opt(:kube_config)}" + (kube_context ? " --context #{kube_context}" : "")
+  private def kubecmd : String
+    opt(:kube_bin).as(String)
+  end
+
+  private def kube_args
+    @kube_args ||= (kube_context ? ["--kubeconfig", opt(:kube_config).as(String), "--context", kube_context.not_nil!] : ["--kubeconfig", opt(:kube_config).as(String)])
   end
 
   def kubectl(args : Array(String), silent = false)
-    cmd = "#{self.kubecmd} #{args.join(" ")}"
-
     if silent
-      system_cmd cmd
+      system_cmd(kubecmd, (kube_args + args))
     else
-      run_cmd(cmd)
+      run_cmd(kubecmd, (kube_args + args))
     end
   end
 
   def kubectl(*args)
-    run_cmd("#{self.kubecmd} #{args.join(" ")}")
+    run_cmd(self.kubecmd, (kube_args + args.to_a))
   end
 
   def kubectl?(*args)
-    system_cmd?("#{self.kubecmd} #{args.join(" ")}")
+    system_cmd?(self.kubecmd, (kube_args + args.to_a))
   end
 
   def apply_file(file, ks_path : String)
@@ -64,11 +67,13 @@ module Kube::Helper::Kubectl
       logger.debug { "applying #{path}" }
       begin
         file = ks_path ? File.open(File.join(ks_path, "all.yaml"), "w") : File.tempfile
-        HTTP::Client.get(path) do |response|
+        Halite.get(path) do |response|
           if response.success?
             IO.copy(response.body_io, file)
           else
+            pp response
             logger.error { "cannot get #{path}" }
+            exit 1
           end
         end
       rescue ex
@@ -84,6 +89,7 @@ module Kube::Helper::Kubectl
 
   def create_ns(ns : Namespace)
     create_ns(ns.name)
+
     unless ns.project.nil?
       # Rancher project id
       kubectl("annotate", "--overwrite", "namespace",
@@ -97,7 +103,7 @@ module Kube::Helper::Kubectl
       ns.name, "istio-injection=enabled") if ns.istio
   end
 
-  def create_ns(ns)
+  def create_ns(ns : String)
     unless kubectl?("get", "namespace", ns)
       logger.info { "creating namespace: #{ns}" }
       kubectl("create", "namespace", ns)

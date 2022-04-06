@@ -12,8 +12,8 @@ module Kube::Helper::Group
 
     namespace = group.namespace
 
-    logger.info { "group: #{name} - checking namespace" }
-    create_ns(namespace)
+    # logger.info { "group: #{name} - checking namespace" }
+    # create_ns(namespace)
 
     group.config_maps.each do |s|
       s.namespace = group.namespace.name if s.namespace.nil?

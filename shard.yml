@@ -17,3 +17,5 @@ dependencies:
     github: spoved/spoved.cr
   tablo:
     github: hutou/tablo
+  halite:
+    github: icyleaf/halite

@@ -1,14 +1,14 @@
 version: 2.0
 shards:
   halite:
-    git: https://github.com/kalinon/halite.git
-    version: 0.11.0+git.commit.80785b35b2246107f371d4ad64145a53176b83a4
+    git: https://github.com/icyleaf/halite.git
+    version: 0.12.1
 
   spoved:
     git: https://github.com/spoved/spoved.cr.git
-    version: 0.5.5
+    version: 0.8.2
 
   tablo:
     git: https://github.com/hutou/tablo.git
-    version: 0.9.5
+    version: 0.10.1
 

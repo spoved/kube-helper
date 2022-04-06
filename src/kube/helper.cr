@@ -46,6 +46,7 @@ class Kube::Helper
 
   def initialize
     parse_args
+    find_bins
 
     config_file = File.join(OPTIONS[:workdir].as(String), OPTIONS[:config_file].as(String))
 
@@ -60,6 +61,20 @@ class Kube::Helper
         app.namespace = group.namespace.name if app.namespace.nil?
       end
     end
+  end
+
+  def find_bins
+    ENV.fetch("PATH", "").split(":").each do |path|
+      if File.exists?(File.join(path, "kubectl"))
+        OPTIONS[:kube_bin] = File.join(path, "kubectl")
+      end
+      if File.exists?(File.join(path, "helm"))
+        OPTIONS[:helm_bin] = File.join(path, "helm")
+      end
+    end
+
+    logger.debug { "using kubectl: #{OPTIONS[:kube_bin]}" }
+    logger.debug { "using helm: #{OPTIONS[:helm_bin]}" }
   end
 
   def opts
@@ -86,9 +101,10 @@ class Kube::Helper
     @config
   end
 
-  def run_cmd(cmd)
-    result = system_cmd(cmd)
-    raise "command failed: #{cmd}" unless result[:status]
+  def run_cmd(cmd, args)
+    logger.debug { "running: #{cmd} #{args.join(" ")}" }
+    result = system_cmd(cmd, args)
+    raise "command failed: #{cmd} #{args.join(" ")}" unless result[:status]
     result
   end
 
@@ -120,7 +136,7 @@ class Kube::Helper
         next
       end
       logger.info { "Updating app definition: #{options.name}" }
-      create_ns(options.namespace)
+      create_ns(options.namespace!)
       apply_app(options)
     end
   end
@@ -196,7 +212,7 @@ class Kube::Helper
       context = config.context
       if context
         logger.info { "setting context #{context}" }
-        kubectl("config", "use-context", context)
+        kubectl("config", "use-context", context.not_nil!.as(String))
       end
 
       update_helm_repos if opt(:helm_repos)
