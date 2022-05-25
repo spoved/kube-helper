@@ -13,8 +13,19 @@ class Config
   property apps : Array(AppOptions) = Array(AppOptions).new
   property groups : Array(Group) = Array(Group).new
   property context : String? = nil
+  property kustomize : Array(KustomizeConfig) = Array(KustomizeConfig).new
 
   def initialize; end
+end
+
+struct KustomizeConfig
+  include JSON::Serializable
+  include YAML::Serializable
+  property name : String
+  property namespace : String? = nil
+  property path : String
+
+  def initialize(@name, @namespace, @path); end
 end
 
 class Group
@@ -48,18 +59,19 @@ class Namespace
   property project : String? = nil
   property istio : Bool = false
 
-  def initialize(@name, @project);end
+  def initialize(@name, @project); end
 end
 
 class Helm
   include JSON::Serializable
   include YAML::Serializable
   property repos : Repos = Repos.new
+
   def initialize; end
 end
 
-alias Values=YAML::Any
-alias Repos=Hash(String, String)
+alias Values = YAML::Any
+alias Repos = Hash(String, String)
 
 class AppOptions
   include JSON::Serializable

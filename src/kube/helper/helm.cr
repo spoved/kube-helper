@@ -29,6 +29,8 @@ module Kube::Helper::Helm
       args << "--post-renderer" << File.join(ks_path, "kustomize")
     end
 
+    args << "--dry-run" if dry_run?
+
     if silent
       system_cmd helmcmd, args
     else

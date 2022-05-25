@@ -1,8 +1,16 @@
 module Kube::Helper::Apps
-  def should_skip?(options) : Bool
+  def should_skip?(options : AppOptions) : Bool
     if options.ignore
       true
     elsif (opt(:name_filter) && !opt(:names).as(Array(String)).includes?(options.name))
+      true
+    else
+      false
+    end
+  end
+
+  def should_skip?(options : KustomizeConfig) : Bool
+    if (opt(:name_filter) && !opt(:names).as(Array(String)).includes?(options.name))
       true
     else
       false
@@ -58,8 +66,23 @@ module Kube::Helper::Apps
         _run_helm(name: app.name, options: app, ks_path: ks_path)
       end
 
+      apply_kustomize(KustomizeConfig.new(
+        app.name, app.namespace, app.kustomize.not_nil!
+      ), ks_path) if app.kustomize
       _apply_manifests(app, ks_path: ks_path)
+
       apply_after(app, ks_path: ks_path)
+    end
+  end
+
+  def apply_kustomize(k : KustomizeConfig, ks_path)
+    path = File.expand_path(k.path)
+    tempfile = File.tempfile(prefix: "kustomize", suffix: nil)
+    begin
+      system_cmd("kustomize build #{path} > #{tempfile.path}")
+      apply_file(tempfile.path, ks_path)
+    ensure
+      tempfile.delete
     end
   end
 end

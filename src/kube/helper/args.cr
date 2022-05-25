@@ -28,6 +28,7 @@ module Kube::Helper::Args
       parser.on("--kubeconfig FILE", "Path to the kube config file. default: #{OPTIONS[:kube_config]}") { |file| OPTIONS[:kube_config] = file }
       parser.on("--context CONTEXT", "The name of the kubeconfig context to use. " \
                                      "NOTE: this will override context in config file") { |file| OPTIONS[:context] = file }
+      parser.on("--dry-run", "Do not apply changes") { OPTIONS[:dry_run] = true }
 
       parser.separator
       parser.separator("Logging Flags:")
@@ -49,6 +50,7 @@ module Kube::Helper::Args
       parser.on("-m", "--manifests", "Apply manifests") { OPTIONS[:manifests] = true }
       parser.on("-s", "--secrets", "Apply secrets") { OPTIONS[:secrets] = true }
       parser.on("-c", "--configmaps", "Apply configmaps") { OPTIONS[:config_maps] = true }
+      parser.on("-k", "--kustomize", "Apply kustomize") { OPTIONS[:kustomize] = true }
 
       # parser.separator
       parser.separator("  filter resources:")

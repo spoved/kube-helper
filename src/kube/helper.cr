@@ -19,6 +19,7 @@ OPTIONS = Hash(Symbol, Bool | String | Nil | Array(String)){
   :apps        => false,
   :delete      => false,
   :groups      => false,
+  :kustomize   => false,
   :group_names => Array(String).new,
   :list        => false,
   :workdir     => "./",
@@ -27,6 +28,7 @@ OPTIONS = Hash(Symbol, Bool | String | Nil | Array(String)){
   :kube_bin    => "kubectl",
   :helm_bin    => "helm",
   :context     => nil,
+  :dry_run     => false,
 }
 
 class Kube::Helper
@@ -95,6 +97,10 @@ class Kube::Helper
 
   def kube_context : String?
     (opt(:context) || @config.context).as(String?)
+  end
+
+  def dry_run? : Bool
+    opt(:dry_run).as(Bool)
   end
 
   def config
@@ -168,12 +174,43 @@ class Kube::Helper
     end
   end
 
+  def check_kustomize
+    return if config.kustomize.empty?
+    logger.info { "Applying Kustomize" }
+    config.kustomize.each do |k|
+      next if should_skip?(k)
+      ks = Kube::Helper::Kustomize.build_kustomization(k.name, "root")
+      Kube::Helper::Kustomize.with_kustomize(ks) do |ks_path|
+        apply_kustomize(k, ks_path)
+      end
+    end
+  end
+
+  def list_kustomize
+    data = Array(Array(String)).new
+    filler = "---"
+    config.kustomize.each do |k|
+      next if should_skip?(k)
+      data << [k.name, k.namespace || filler, k.path]
+    end
+
+    table = Tablo::Table.new(data, connectors: Tablo::CONNECTORS_SINGLE_ROUNDED) do |t|
+      t.add_column("Name", &.[0])
+      t.add_column("Namespace", &.[1])
+      t.add_column("Path", &.[2])
+    end
+
+    table.shrinkwrap!
+    puts table
+  end
+
   def list_apps
     data = Array(Array(String)).new
     filler = "---"
 
     # List top level apps
     self.config.apps.each do |app|
+      next if should_skip?(app)
       if app.namespace.nil?
         raise "Namespace is required for apps defined on top level"
       end
@@ -183,8 +220,12 @@ class Kube::Helper
 
     # List groups and group apps
     self.config.groups.each do |group|
+      next if !group_names.empty? && !group_names.includes?(group.name)
+
       data << [group.name, filler, group.ignore.to_s, group.namespace.name]
       group.apps.each do |app|
+        next if should_skip?(app)
+
         ns = app.namespace!
         data << [group.name, app.name, (group.ignore || app.ignore).to_s, ns]
       end
@@ -199,13 +240,19 @@ class Kube::Helper
 
     table.shrinkwrap!
     puts table
-    exit
   end
 
   def run!
     Dir.cd(workdir) do
       logger.trace &.emit "start", pwd: FileUtils.pwd
-      list_apps if opt(:list)
+      if opt(:list)
+        puts "Kustomize:"
+        list_kustomize
+        puts ""
+        puts "Apps:"
+        list_apps
+        exit
+      end
 
       logger.info { "Start" }
 
@@ -223,6 +270,7 @@ class Kube::Helper
         check_secrets(ks_path) if opt(:secrets) || opt(:all)
         check_config_maps(ks_path) if opt(:config_maps) || opt(:all)
         check_manifests(ks_path) if opt(:manifests) || opt(:all)
+        check_kustomize if opt(:kustomize) || opt(:all)
         check_apps if opt(:apps) || opt(:all)
         check_groups if opt(:groups) || opt(:all)
       end

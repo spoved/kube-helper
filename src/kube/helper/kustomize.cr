@@ -5,7 +5,7 @@ module Kube::Helper::Kustomize
     "resources"  => ["all.yaml"],
   }
 
-  def self.build_kustomization(group, name)
+  def self.build_kustomization(name, group)
     HEADER.dup.merge({
       "commonAnnotations" => {
         "kube-helper.alpha.kubernetes.io/version" => Kube::Helper::VERSION,

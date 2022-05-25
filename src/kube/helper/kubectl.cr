@@ -16,6 +16,10 @@ module Kube::Helper::Kubectl
   end
 
   def kubectl(args : Array(String), silent = false)
+    if args.includes?("apply") || args.includes?("delete")
+      args = (args.dup << "--dry-run=client") if dry_run?
+    end
+
     if silent
       system_cmd(kubecmd, (kube_args + args))
     else
@@ -24,7 +28,7 @@ module Kube::Helper::Kubectl
   end
 
   def kubectl(*args)
-    run_cmd(self.kubecmd, (kube_args + args.to_a))
+    kubectl(kube_args + args.to_a)
   end
 
   def kubectl?(*args)
