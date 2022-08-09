@@ -58,19 +58,24 @@ module Kube::Helper::Apps
     end
 
     ks = Kube::Helper::Kustomize.build_kustomization(app.name, group_name)
+
     Kube::Helper::Kustomize.with_kustomize(ks) do |ks_path|
       create_ns(app.namespace!)
       apply_before(app, ks_path: ks_path)
+    end
 
-      if is_helm_app?(app)
+    # If this is a helm app
+    if is_helm_app?(app)
+      Kube::Helper::Kustomize.with_kustomize(ks, app.kustomize) do |ks_path|
         _run_helm(name: app.name, options: app, ks_path: ks_path)
       end
+    else
+      # Apply kustomize
+      apply_kustomize(app, group_name) if app.kustomize
+    end
 
-      apply_kustomize(KustomizeConfig.new(
-        app.name, app.namespace, app.kustomize.not_nil!
-      ), ks_path) if app.kustomize
+    Kube::Helper::Kustomize.with_kustomize(ks) do |ks_path|
       _apply_manifests(app, ks_path: ks_path)
-
       apply_after(app, ks_path: ks_path)
     end
   end
@@ -83,6 +88,16 @@ module Kube::Helper::Apps
       apply_file(tempfile.path, ks_path)
     ensure
       tempfile.delete
+    end
+  end
+
+  def apply_kustomize(app : AppOptions, group_name)
+    ks = Kube::Helper::Kustomize.build_kustomization(app.name, group_name)
+    Kube::Helper::Kustomize.with_kustomize(ks) do |ks_path|
+      k = KustomizeConfig.new(
+        app.name, app.namespace, app.kustomize.not_nil!
+      )
+      apply_kustomize(k, ks_path)
     end
   end
 end

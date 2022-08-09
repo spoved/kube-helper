@@ -1,6 +1,6 @@
 module Kube::Helper::Secrets
   def apply_secret(secret : Secret, ks_path : String)
-    logger.debug { "Applying Secret: #{secret.name} namespace: #{secret.namespace}" }
+    logger.info { "Applying Secret: #{secret.name} namespace: #{secret.namespace}" }
     # create secret generic -n vault vault --from-file=config -o yaml --dry-run=client
     args = %w(create secret generic)
     build_secret_args(secret, args)
@@ -23,19 +23,17 @@ module Kube::Helper::Secrets
   end
 
   def with_kube_template_file(args)
-    begin
-      resp = kubectl(args, silent: true)
+    resp = kubectl(args, silent: true)
 
-      tempfile = File.tempfile(".yml") do |file|
-        file.print(resp[:output])
-      end
-
-      yield tempfile.path
-    rescue ex
-      raise ex
-    ensure
-      tempfile.delete unless tempfile.nil?
+    tempfile = File.tempfile(".yml") do |file|
+      file.print(resp[:output])
     end
+
+    yield tempfile.path
+  rescue ex
+    raise ex
+  ensure
+    tempfile.delete unless tempfile.nil?
   end
 
   def from_literal_args(env) : String
@@ -49,7 +47,7 @@ module Kube::Helper::Secrets
   end
 
   def from_file_args(file) : String
-    "--from-file=#{file.name}=#{get_path(file.path)}"
+    %<--from-file="#{file.name}=#{get_path(file.path)}">
   end
 
   def build_secret_args(secret, args)
@@ -69,6 +67,6 @@ module Kube::Helper::Secrets
       end
     end
 
-    args << "--dry-run=client -o yaml"
+    args << "--dry-run=client" << "-o" << "yaml"
   end
 end
