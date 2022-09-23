@@ -85,6 +85,7 @@ class AppOptions
   property version : String? = nil
   property namespace : String? = nil
   property values : Values? = nil
+  property value_files : Array(String)? = nil
   property secrets : Array(Secret) = Array(Secret).new
   property config_maps : Array(Secret) = Array(Secret).new
 

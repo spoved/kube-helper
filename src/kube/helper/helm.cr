@@ -14,11 +14,17 @@ module Kube::Helper::Helm
   end
 
   # Run a helm command
-  def helm(*_args, namespace, silent : Bool = false, json : Bool = true, version : String? = nil, ks_path : String? = nil)
+  def helm(*_args, namespace, silent : Bool = false, json : Bool = true, version : String? = nil, ks_path : String? = nil, value_files : Array(String)? = nil)
     args = _args.to_a
     args << "--namespace" << namespace
     args << "-o" << "json" if json
     args << "--version" << version unless version.nil?
+
+    unless value_files.nil?
+      value_files.each do |vpath|
+        args << "-f" << File.join(self.workdir, vpath)
+      end
+    end
 
     # cmd = "#{self.helmcmd} --namespace #{namespace} "
     # cmd += " -o json " if json
@@ -129,6 +135,7 @@ module Kube::Helper::Helm
           json: false,
           version: options.version,
           ks_path: ks_path,
+          value_files: options.value_files,
         )
       else
         _helm_with_values(options) do |values_path|
@@ -139,6 +146,7 @@ module Kube::Helper::Helm
             json: false,
             version: options.version,
             ks_path: ks_path,
+            value_files: options.value_files,
           )
         end
       end
