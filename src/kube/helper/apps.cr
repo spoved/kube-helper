@@ -61,6 +61,7 @@ module Kube::Helper::Apps
 
     Kube::Helper::Kustomize.with_kustomize(ks) do |ks_path|
       create_ns(app.namespace!)
+      run_before(app)
       apply_before(app, ks_path: ks_path)
     end
 
@@ -77,6 +78,7 @@ module Kube::Helper::Apps
     Kube::Helper::Kustomize.with_kustomize(ks) do |ks_path|
       _apply_manifests(app, ks_path: ks_path)
       apply_after(app, ks_path: ks_path)
+      run_after(app)
     end
   end
 
@@ -98,6 +100,18 @@ module Kube::Helper::Apps
         app.name, app.namespace, app.kustomize.not_nil!
       )
       apply_kustomize(k, ks_path)
+    end
+  end
+
+  def run_before(app)
+    app.run_before.each do |cmd|
+      run_cmd(*parse_cmd(cmd))
+    end
+  end
+
+  def run_after(app)
+    app.run_after.each do |cmd|
+      run_cmd(*parse_cmd(cmd))
     end
   end
 end

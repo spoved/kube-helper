@@ -114,6 +114,11 @@ class Kube::Helper
     result
   end
 
+  def parse_cmd(cmd)
+    parts = cmd.split(/("[^"]+"|[^\s"]+)/).reject(&.empty?)
+    {parts.shift, parts}
+  end
+
   def get_path(sub_path)
     File.join(self.workdir, sub_path)
   end

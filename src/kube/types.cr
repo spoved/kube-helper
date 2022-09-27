@@ -43,6 +43,9 @@ class Group
   property default_namespace : String? = nil
   property istio : Bool = false
 
+  property run_before : Array(String) = Array(String).new
+  property run_after : Array(String) = Array(String).new
+
   def namespace : Namespace
     if self.default_namespace.nil?
       Namespace.new(self.name, self.project)
@@ -93,6 +96,9 @@ class AppOptions
   property before : Array(String) = Array(String).new
   property after : Array(String) = Array(String).new
   property ignore : Bool = false
+
+  property run_before : Array(String) = Array(String).new
+  property run_after : Array(String) = Array(String).new
 
   def namespace!
     self.namespace.not_nil!

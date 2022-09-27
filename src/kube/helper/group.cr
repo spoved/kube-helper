@@ -39,6 +39,13 @@ module Kube::Helper::Group
         end
       end
 
+      unless group.run_before.empty?
+        logger.info { "group: #{name} - running scripts listed in run_before" }
+        group.run_before.each do |cmd|
+          run_cmd(*parse_cmd(cmd))
+        end
+      end
+
       unless group.before.empty?
         logger.info { "group: #{name} - applying manifests listed in before" }
         group.before.each do |file|
@@ -57,6 +64,13 @@ module Kube::Helper::Group
         logger.info { "group: #{name} - applying manifests listed in after" }
         group.after.each do |file|
           apply_manifest(file, namespace.name, ks_path)
+        end
+      end
+
+      unless group.run_after.empty?
+        logger.info { "group: #{name} - running scripts listed in run_after" }
+        group.run_after.each do |cmd|
+          run_cmd(*parse_cmd(cmd))
         end
       end
     end
