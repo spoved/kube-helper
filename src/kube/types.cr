@@ -97,6 +97,7 @@ class AppOptions
   property after : Array(String) = Array(String).new
   property ignore : Bool = false
 
+  property run : Array(String) = Array(String).new
   property run_before : Array(String) = Array(String).new
   property run_after : Array(String) = Array(String).new
 

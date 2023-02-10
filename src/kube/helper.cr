@@ -115,7 +115,7 @@ class Kube::Helper
   end
 
   def parse_cmd(cmd)
-    parts = cmd.split(/("[^"]+"|[^\s"]+)/).reject(&.empty?)
+    parts = cmd.split(/("[^"]+"|[^\s"]+)/).map!(&.chomp(' ')).reject(&.empty?)
     {parts.shift, parts}
   end
 

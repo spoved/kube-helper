@@ -71,6 +71,11 @@ module Kube::Helper::Apps
         _run_helm(name: app.name, options: app, ks_path: ks_path)
       end
     else
+      # Run any commands
+      app.run.each do |cmd|
+        run_cmd(*parse_cmd(cmd))
+      end
+
       # Apply kustomize
       apply_kustomize(app, group_name) if app.kustomize
     end
