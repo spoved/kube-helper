@@ -29,6 +29,7 @@ OPTIONS = Hash(Symbol, Bool | String | Nil | Array(String)){
   :helm_bin    => "helm",
   :context     => nil,
   :dry_run     => false,
+  :server_side => false,
 }
 
 class Kube::Helper

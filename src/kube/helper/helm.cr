@@ -42,6 +42,9 @@ module Kube::Helper::Helm
     else
       run_cmd(helmcmd, args)
     end
+  rescue ex
+    sleep 500
+    raise ex
   end
 
   # Will update all helm repos

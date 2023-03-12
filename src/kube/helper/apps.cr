@@ -44,6 +44,7 @@ module Kube::Helper::Apps
   end
 
   def apply_app(app : AppOptions, group_name : String = "root")
+    logger.info { "applying app #{group_name}/#{app}" }
     if should_skip?(app)
       logger.warn { "ignoring app: #{app.name}" }
       return
@@ -87,19 +88,32 @@ module Kube::Helper::Apps
     end
   end
 
+  # This method applies a Kustomize configuration to a given path.
+  # It takes a KustomizeConfig object and the ks_path to apply the configuration to.
   def apply_kustomize(k : KustomizeConfig, ks_path)
+    # Get the path of the Kustomize configuration and create a temporary file to store the output.
     path = File.expand_path(k.path)
     tempfile = File.tempfile(prefix: "kustomize", suffix: nil)
+
     begin
-      system_cmd("kustomize build #{path} > #{tempfile.path}")
+      # Use the system command to build the Kustomize configuration and output the results to the temporary file.
+      system_cmd("kustomize build #{path} -o #{tempfile.path}")
+
+      # Apply the configuration from the temporary file to the given path.
       apply_file(tempfile.path, ks_path)
     ensure
+      # Delete the temporary file.
       tempfile.delete
     end
   end
 
+  # This method applies the Kustomize configuration for the given application and group.
+  # It builds the Kustomize configuration for the application using the group name, then applies it.
   def apply_kustomize(app : AppOptions, group_name)
+    # Build the Kustomize configuration for the application using the group name.
     ks = Kube::Helper::Kustomize.build_kustomization(app.name, group_name)
+
+    # Apply the Kustomize configuration.
     Kube::Helper::Kustomize.with_kustomize(ks) do |ks_path|
       k = KustomizeConfig.new(
         app.name, app.namespace, app.kustomize.not_nil!
@@ -108,12 +122,14 @@ module Kube::Helper::Apps
     end
   end
 
+  # This method runs the 'run_before' commands specified in the application's configuration.
   def run_before(app)
     app.run_before.each do |cmd|
       run_cmd(*parse_cmd(cmd))
     end
   end
 
+  # This method runs the 'run_after' commands specified in the application's configuration.
   def run_after(app)
     app.run_after.each do |cmd|
       run_cmd(*parse_cmd(cmd))

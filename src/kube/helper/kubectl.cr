@@ -48,6 +48,7 @@ module Kube::Helper::Kubectl
   end
 
   private def apply_server_side(path)
+    return "--server-side=false" unless opt(:server_side)
     server_side = File.size(path) > 262144
     "--server-side=#{server_side}"
   end
