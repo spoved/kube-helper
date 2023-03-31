@@ -182,9 +182,10 @@ class Kube::Helper
 
   def check_kustomize
     return if config.kustomize.empty?
-    logger.info { "Applying Kustomize" }
+    logger.info { "start kustomize" }
     config.kustomize.each do |k|
       next if should_skip?(k)
+      logger.info { "applying kustomize: #{k.name}" }
       ks = Kube::Helper::Kustomize.build_kustomization(k.name, "root")
       Kube::Helper::Kustomize.with_kustomize(ks) do |ks_path|
         apply_kustomize(k, ks_path)
