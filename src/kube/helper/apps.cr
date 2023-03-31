@@ -44,7 +44,7 @@ module Kube::Helper::Apps
   end
 
   def apply_app(app : AppOptions, group_name : String = "root")
-    logger.info { "applying app #{group_name}/#{app}" }
+    logger.info { "applying app #{group_name}/#{app.name}" }
     if should_skip?(app)
       logger.warn { "ignoring app: #{app.name}" }
       return
