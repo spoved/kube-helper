@@ -148,7 +148,6 @@ class Kube::Helper
         next
       end
       logger.info { "Updating app definition: #{options.name}" }
-      create_ns(options.namespace!)
       apply_app(options)
     end
   end

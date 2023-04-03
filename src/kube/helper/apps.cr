@@ -61,7 +61,6 @@ module Kube::Helper::Apps
     ks = Kube::Helper::Kustomize.build_kustomization(app.name, group_name)
 
     Kube::Helper::Kustomize.with_kustomize(ks) do |ks_path|
-      create_ns(app.namespace!)
       run_before(app)
       apply_before(app, ks_path: ks_path)
     end

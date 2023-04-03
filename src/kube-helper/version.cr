@@ -1,3 +1,3 @@
 class Kube::Helper
-  VERSION = "1.0.0"
+  VERSION = {{ `shards version "#{__DIR__}"`.chomp.stringify }}
 end

@@ -56,7 +56,7 @@ module Kube::Helper::Kubectl
   def apply_manifest(path : String, namespace : String, ks_path : String)
     return apply_manifest(path, ks_path) if /^http/ === path
     # server_side = File.size(path) > 262144
-
+    create_ns(namespace)
     FileUtils.cp(path, File.join(ks_path, "all.yaml"))
     if opt(:delete)
       logger.warn { "deleting #{path}" }
