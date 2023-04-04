@@ -4,6 +4,10 @@ shards:
     git: https://github.com/icyleaf/halite.git
     version: 0.12.1
 
+  open-api:
+    git: https://github.com/spoved/open-api.cr.git
+    version: 0.2.10
+
   spoved:
     git: https://github.com/spoved/spoved.cr.git
     version: 0.8.4

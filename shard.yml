@@ -19,3 +19,7 @@ dependencies:
     github: hutou/tablo
   halite:
     github: icyleaf/halite
+
+development_dependencies:
+  open-api:
+    github: spoved/open-api.cr

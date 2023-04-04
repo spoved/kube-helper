@@ -4,17 +4,20 @@
 
 ## Top level members
 
-| key                                 | type               | description                                                         |
-| ----------------------------------- | ------------------ | ------------------------------------------------------------------- |
-| [`helm`](#helm)                     | Object             | Object containing helm configurations                               |
-| [`manifests`](#configmap--secret)   | Array(String)      | An array of strings of manifest paths                               |
-| [`config_maps`](#configmap--secret) | Array(Object)      | An array of `ConfigMap` objects                                     |
-| [`secrets`](#configmap--secret)     | Array(Object)      | An array of `Secret` objects                                        |
-| [`namespaces`](#namespace)          | Array(Object)      | An array of `Namespace` objects                                     |
-| [`groups`](#group)                  | Array(GroupObject) | A list of [`Group`](#group-object-definition) objects               |
-| [`apps`](#applications)             | Array(Object)      | An array of [`Application`](#application-object-definition) objects |
+| key                                 | type                   | description                                                           |
+| ----------------------------------- | ---------------------- | --------------------------------------------------------------------- |
+| `context`                           | String                 | The k8s context to use (optional)                                     |
+| [`helm`](#helm)                     | Object                 | Object containing helm configurations                                 |
+| [`manifests`](#configmap--secret)   | Array(String)          | An array of strings of manifest paths                                 |
+| [`config_maps`](#configmap--secret) | Array(Object)          | An array of `ConfigMap` objects                                       |
+| [`secrets`](#configmap--secret)     | Array(Object)          | An array of `Secret` objects                                          |
+| [`namespaces`](#namespace)          | Array(Object)          | An array of `Namespace` objects                                       |
+| [`groups`](#group)                  | Array(GroupObject)     | A array of [`Group`](#group-object-definition) objects                |
+| [`apps`](#applications)             | Array(Object)          | An array of [`Application`](#application-object-definition) objects   |
+| [`kustomize`](#kustomize)           | Array(KustomizeConfig) | An array of [`KustomizeConfig`](#kustomize-conifg-definition) objects |
 
 ```yaml
+context: my-context
 helm: {}
 manifests: []
 config_maps: []
@@ -22,6 +25,7 @@ secrets: []
 namespaces: []
 groups: {}
 apps: []
+kustomize: []
 ```
 
 ## Object Definitions
@@ -96,24 +100,28 @@ namespaces:
 
 ### Applications
 
-A `Application` object defines a helm chart instalation or a logical grouping of `ConfigMap`, `Secret`, or `Manifests` to apply.
+A `Application` object defines a helm chart installation or a logical grouping of `ConfigMap`, `Secret`, or `Manifests` to apply.
 
 #### Application Object Definition
 
-| name          | type               | required | description                                                                         |
-| ------------- | ------------------ | -------- | ----------------------------------------------------------------------------------- |
-| `name`        | String             | true     | This is the name of app used for filtering                                          |
-| `namespace`   | String             | true     | The namepace all resources will be placed into. Will create it if it doesnt exist.  |
-| `config_maps` | Array(Object)      | false    | An array of `ConfigMap` objects                                                     |
-| `secrets`     | Array(Object)      | false    | An array of `Secret` objects                                                        |
-| `manifests`   | Array(String)      | false    | An array of strings of manifest paths                                               |
-| `before`      | Array(String)      | false    | Same as `manifests` but will be applied first                                       |
-| `after`       | Array(String)      | false    | Same as `manifests` but will be applied last                                        |
-| `chart_path`  | String             | false    | This can be a local path to a helm directory or tar file.                           |
-| `chart_url`   | String             | false    | This can be a http url to a helm tar file                                           |
-| `version`     | String             | false    | The chart version to specify                                                        |
-| `values`      | (String \| Object) | false    | This can be a path to a file to be used as a values.yml or the raw yaml data itself |
-| `ignored`     | Bool               | false    | If set to true, it and all sub resources will be ignored by the tool                |
+| name          | type               | required | description                                                                          |
+| ------------- | ------------------ | -------- | ------------------------------------------------------------------------------------ |
+| `name`        | String             | true     | This is the name of app used for filtering                                           |
+| `namespace`   | String             | true     | The namespace all resources will be placed into. Will create it if it doesn't exist. |
+| `config_maps` | Array(Object)      | false    | An array of `ConfigMap` objects                                                      |
+| `secrets`     | Array(Object)      | false    | An array of `Secret` objects                                                         |
+| `manifests`   | Array(String)      | false    | An array of strings of manifest paths                                                |
+| `before`      | Array(String)      | false    | Same as `manifests` but will be applied first                                        |
+| `after`       | Array(String)      | false    | Same as `manifests` but will be applied last                                         |
+| `chart_path`  | String             | false    | This can be a local path to a helm directory or tar file.                            |
+| `chart_url`   | String             | false    | This can be a http url to a helm tar file                                            |
+| `version`     | String             | false    | The chart version to specify                                                         |
+| `values`      | (String \| Object) | false    | This can be a path to a file to be used as a values.yml or the raw yaml data itself  |
+| `ignored`     | Bool               | false    | If set to true, it and all sub resources will be ignored by the tool                 |
+| `run`         | Array(String)      | false    | A list of commands to run                                                            |
+| `run_before`  | Array(String)      | false    | Same as `run` but will be ran first                                                  |
+| `run_after`   | Array(String)      | false    | Same as `run` but will be ran last                                                   |
+| `kustomize`   | String             | false    | A path to a kustomize directory to apply                                             |
 
 #### Helm Charts
 
@@ -171,9 +179,20 @@ apps:
       - apps/operators/minio/operator.yml
 ```
 
+They can also point to a kustomize folder to apply.
+
+```yaml
+apps:
+  - name: minio-operator
+    namespace: minio-operator
+    kustomize: apps/operators/minio
+```
+
+Omit the `namespace` key to apply to the default namespace or whatever is set in the kustomize.
+
 ### Group
 
-A `Group` object is a logical grouping of `apps` other resources for oganizational purposes.
+A `Group` object is a logical grouping of `apps` other resources for organizational purposes.
 
 #### Group Object Definition
 
@@ -187,6 +206,9 @@ A `Group` object is a logical grouping of `apps` other resources for oganization
 | `after`             | Array(String)      | false    | Same as `manifests` but will be applied after children               |
 | `ignored`           | Bool               | false    | If set to true, it and all sub resources will be ignored by the tool |
 | `apps`              | Array(Application) | false    | An array of `Application` objects                                    |
+| `run_before`        | Array(String)      | false    | A list of commands to run before                                     |
+| `run_after`         | Array(String)      | false    | A list of commands to run after                                      |
+| `istio`             | Bool               | false    | If set to true, it will add istio annotations to the namespace       |
 
 ```yaml
 groups:
@@ -210,6 +232,25 @@ groups:
         chart_path: apps/vault/v0.5.0.tar.gz
 ```
 
+### Kustomize
+
+A `Kustomize` object is a list of kustomize configs to apply. These can be applied by passing the `--kustomize` or `-k` flag
+
+#### Kustomize Config Definition
+
+| name        | type   | required | description                                    |
+| ----------- | ------ | -------- | ---------------------------------------------- |
+| `name`      | String | true     | Name of the kustomize config                   |
+| `namespace` | String | false    | The namespace to apply the kustomize config to |
+| `path`      | String | true     | The path to the kustomize config               |
+
+```yaml
+kustomize:
+  - name: my-kustomize-config
+    namespace: my-namespace
+    path: ./kustomize
+```
+
 ## Full Example
 
 ```yaml
@@ -223,7 +264,10 @@ helm:
 manifests:
   - https://github.com/jetstack/cert-manager/releases/download/v1.2.0/cert-manager.yaml
   - manifests/cert-manager/cluster-issuers.yml
-
+kustomize:
+  - name: my-kustomize-config
+    namespace: my-namespace
+    path: ./kustomize
 secrets:
   - name: my-secret-database-config
     namespace: database
@@ -271,7 +315,21 @@ groups:
       - name: vault
         namespace: development
         chart_path: apps/vault/v0.5.0.tar.gz
-
+  test:
+    default_namespace: test
+    istio: false
+    apps:
+      - name: sidekiq-web
+        chart_path: ./charts/app/
+        values: apps/fulgurite/sidekiq/sidekiq-web.yml
+      - name: vault
+        chart_path: apps/vault/v0.5.0.tar.gz
+        run_before:
+          - echo "before"
+        run_after:
+          - echo "after"
+      - name: kustom
+        kustomize: apps/kustom
 apps:
   - name: minio-operator
     namespace: minio-operator

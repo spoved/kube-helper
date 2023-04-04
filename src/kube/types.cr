@@ -5,6 +5,7 @@ class Config
   include JSON::Serializable
   include YAML::Serializable
 
+  property context : String? = nil
   property helm : Helm = Helm.new
   property secrets : Array(Secret) = Array(Secret).new
   property config_maps : Array(Secret) = Array(Secret).new
@@ -12,7 +13,6 @@ class Config
   property manifests : Array(String) = Array(String).new
   property apps : Array(AppOptions) = Array(AppOptions).new
   property groups : Array(Group) = Array(Group).new
-  property context : String? = nil
   property kustomize : Array(KustomizeConfig) = Array(KustomizeConfig).new
 
   def initialize; end
@@ -48,9 +48,9 @@ class Group
 
   def namespace : Namespace
     if self.default_namespace.nil?
-      Namespace.new(self.name, self.project)
+      Namespace.new(self.name, self.project, self.istio)
     else
-      Namespace.new(self.default_namespace.not_nil!, nil)
+      Namespace.new(self.default_namespace.not_nil!, nil, self.istio)
     end
   end
 end
@@ -62,7 +62,7 @@ class Namespace
   property project : String? = nil
   property istio : Bool = false
 
-  def initialize(@name, @project); end
+  def initialize(@name, @project, @istio = false); end
 end
 
 class Helm
@@ -73,7 +73,7 @@ class Helm
   def initialize; end
 end
 
-alias Values = YAML::Any
+alias Values = Hash(String, YAML::Any)
 alias Repos = Hash(String, String)
 
 class AppOptions
@@ -87,7 +87,7 @@ class AppOptions
   property chart_path : String? = nil
   property version : String? = nil
   property namespace : String? = nil
-  property values : Values? = nil
+  property values : String | Values | Nil = nil
   property value_files : Array(String)? = nil
   property secrets : Array(Secret) = Array(Secret).new
   property config_maps : Array(Secret) = Array(Secret).new
