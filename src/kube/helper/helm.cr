@@ -109,8 +109,8 @@ module Kube::Helper::Helm
 
   # Build the helm values file and provide the path. If a file path is defined, will yield that back.
   def _helm_with_values(options)
-    if !options.values.nil? && options.values.not_nil!.raw.is_a?(String)
-      path = File.join(self.workdir, options.values.not_nil!.as_s)
+    if !options.values.nil? && options.values.not_nil!.is_a?(String)
+      path = File.join(self.workdir, options.values.not_nil!.as(String))
       raise "Unable to find values file #{options.values}" unless File.exists?(path)
       yield path
     else

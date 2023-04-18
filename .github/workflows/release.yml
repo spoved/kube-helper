@@ -1,0 +1,46 @@
+on:
+  push:
+    tags:
+      - "*"
+jobs:
+  dist_linux:
+    runs-on: ubuntu-latest
+    container:
+      image: crystallang/crystal:latest-alpine
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get current git tag
+        id: tag
+        uses: devops-actions/action-get-tag@v1.0.1
+
+      - name: Update Libs
+        run: apk add --update --upgrade --no-cache --force-overwrite libxml2-dev yaml-dev gpg gpg-agent
+      - name: Build
+        run: |
+          shards build --production --release --no-debug --static
+          strip ./bin/kube-helper
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          REPO: $REPO
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            Changes in this Release
+            - Updates for this release
+          draft: false
+          prerelease: false
+
+      - name: Upload
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/kube-helper
+          asset_name: kube-helper-${{steps.tag.outputs.tag}}-linux-x86_64
+          asset_content_type: binary/octet-stream
