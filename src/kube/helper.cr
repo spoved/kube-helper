@@ -6,30 +6,31 @@ require "./types"
 require "./helper/*"
 
 OPTIONS = Hash(Symbol, Bool | String | Nil | Array(String)){
-  :quiet       => false,
-  :verbose     => false,
-  :debug       => false,
-  :all         => false,
-  :manifests   => false,
-  :namespaces  => false,
-  :names       => Array(String).new,
-  :name_filter => false,
-  :secrets     => false,
-  :config_maps => false,
-  :apps        => false,
-  :delete      => false,
-  :groups      => false,
-  :kustomize   => false,
-  :group_names => Array(String).new,
-  :list        => false,
-  :workdir     => "./",
-  :config_file => "deployment.yml",
-  :kube_config => ENV.fetch("KUBECONFIG", File.join(Path.home, ".kube/config")),
-  :kube_bin    => "kubectl",
-  :helm_bin    => "helm",
-  :context     => nil,
-  :dry_run     => false,
-  :server_side => false,
+  :quiet           => false,
+  :verbose         => false,
+  :debug           => false,
+  :all             => false,
+  :manifests       => false,
+  :namespaces      => false,
+  :names           => Array(String).new,
+  :name_filter     => false,
+  :secrets         => false,
+  :config_maps     => false,
+  :apps            => false,
+  :delete          => false,
+  :groups          => false,
+  :kustomize       => false,
+  :group_names     => Array(String).new,
+  :list            => false,
+  :workdir         => "./",
+  :config_file     => "deployment.yml",
+  :kube_config     => ENV.fetch("KUBECONFIG", File.join(Path.home, ".kube/config")),
+  :kube_bin        => "kubectl",
+  :helm_bin        => "helm",
+  :context         => nil,
+  :dry_run         => false,
+  :server_side     => false,
+  :force_conflicts => false,
 }
 
 class Kube::Helper
@@ -52,6 +53,11 @@ class Kube::Helper
     find_bins
 
     config_file = File.join(OPTIONS[:workdir].as(String), OPTIONS[:config_file].as(String))
+
+    # Try to find `deployment.yaml` if `deployment.yml` is not found
+    if OPTIONS[:config_file].as(String) == "deployment.yml" && !File.exists?(config_file)
+      config_file = File.join(OPTIONS[:workdir].as(String), "deployment.yaml")
+    end
 
     unless File.exists?(config_file)
       puts "ERROR: Config file #{config_file} does not exist"

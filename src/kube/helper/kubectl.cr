@@ -41,10 +41,15 @@ module Kube::Helper::Kubectl
     if File.exists?(path)
       logger.debug { "applying #{file}" }
       FileUtils.cp(path, File.join(ks_path, "all.yaml"))
-      kubectl "apply", apply_server_side(path), "-k", ks_path
+      kubectl "apply", apply_server_side(path), apply_force_conflicts, "-k", ks_path
     else
       logger.error { "cannot find #{file}" }
     end
+  end
+
+  private def apply_force_conflicts
+    return "--force-conflicts=false" if !opt(:force_conflicts) || !opt(:server_side)
+    "--force-conflicts=true"
   end
 
   private def apply_server_side(path)
@@ -55,7 +60,6 @@ module Kube::Helper::Kubectl
 
   def apply_manifest(path : String, namespace : String, ks_path : String)
     return apply_manifest(path, ks_path) if /^http/ === path
-    # server_side = File.size(path) > 262144
     create_ns(namespace)
     FileUtils.cp(path, File.join(ks_path, "all.yaml"))
     if opt(:delete)
@@ -63,7 +67,7 @@ module Kube::Helper::Kubectl
       kubectl "delete", "-n", namespace, "-k", ks_path
     else
       logger.debug { "applying #{path}" }
-      kubectl "apply", "-n", namespace, apply_server_side(path), "-k", ks_path
+      kubectl "apply", "-n", namespace, apply_server_side(path), apply_force_conflicts, "-k", ks_path
     end
   end
 

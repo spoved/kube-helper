@@ -30,6 +30,8 @@ module Kube::Helper::Args
                                      "NOTE: this will override context in config file") { |file| OPTIONS[:context] = file }
       parser.on("--dry-run", "Do not apply changes") { OPTIONS[:dry_run] = true }
       parser.on("--server-side", "Apply changes server side") { OPTIONS[:server_side] = true }
+      parser.on("--force-conflicts", "If true, server-side apply will force the changes against conflicts.") { OPTIONS[:force_conflicts] = true }
+
       parser.separator
       parser.separator("Logging Flags:")
       parser.on("-q", "--quiet", "Log errors only") { OPTIONS[:quiet] = true }
