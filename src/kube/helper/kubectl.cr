@@ -48,12 +48,18 @@ module Kube::Helper::Kubectl
   end
 
   private def apply_force_conflicts
-    return "--force-conflicts=false" if !opt(:force_conflicts) || !opt(:server_side)
-    "--force-conflicts=true"
+    if opt(:force_conflicts) && opt(:server_side)
+      return "--force-conflicts=true"
+    end
+    "--force-conflicts=false"
   end
 
   private def apply_server_side(path)
-    return "--server-side=false" unless opt(:server_side)
+    if opt(:server_side) && opt(:force_conflicts)
+      return "--server-side=true"
+    end
+
+    return "--server-side=false"
     server_side = File.size(path) > 262144
     "--server-side=#{server_side}"
   end
