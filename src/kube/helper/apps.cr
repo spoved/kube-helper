@@ -58,7 +58,7 @@ module Kube::Helper::Apps
       s.namespace = app.namespace! if s.namespace.nil?
     end
 
-    ks = Kube::Helper::Kustomize.build_kustomization(app.name, group_name)
+    ks = Kube::Helper::Kustomize.build_kustomization(app.name, group_name, config.annotations)
 
     Kube::Helper::Kustomize.with_kustomize(ks) do |ks_path|
       run_before(app)
@@ -110,7 +110,7 @@ module Kube::Helper::Apps
   # It builds the Kustomize configuration for the application using the group name, then applies it.
   def apply_kustomize(app : AppOptions, group_name)
     # Build the Kustomize configuration for the application using the group name.
-    ks = Kube::Helper::Kustomize.build_kustomization(app.name, group_name)
+    ks = Kube::Helper::Kustomize.build_kustomization(app.name, group_name, config.annotations)
 
     # Apply the Kustomize configuration.
     Kube::Helper::Kustomize.with_kustomize(ks) do |ks_path|

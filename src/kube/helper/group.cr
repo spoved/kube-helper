@@ -23,7 +23,7 @@ module Kube::Helper::Group
       s.namespace = group.namespace.name if s.namespace.nil?
     end
 
-    ks = Kube::Helper::Kustomize.build_kustomization(nil, group.name)
+    ks = Kube::Helper::Kustomize.build_kustomization(nil, group.name, config.annotations)
     Kube::Helper::Kustomize.with_kustomize(ks) do |ks_path|
       unless group.secrets.empty?
         logger.info { "group: #{name} - applying secrets" }

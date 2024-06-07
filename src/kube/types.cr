@@ -14,6 +14,7 @@ class Config
   property apps : Array(AppOptions) = Array(AppOptions).new
   property groups : Array(Group) = Array(Group).new
   property kustomize : Array(KustomizeConfig) = Array(KustomizeConfig).new
+  property annotations : Hash(String, String) = Hash(String, String).new
 
   def initialize; end
 end

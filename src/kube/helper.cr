@@ -191,7 +191,7 @@ class Kube::Helper
     config.kustomize.each do |k|
       next if should_skip?(k)
       logger.info { "applying kustomize: #{k.name}" }
-      ks = Kube::Helper::Kustomize.build_kustomization(k.name, "root")
+      ks = Kube::Helper::Kustomize.build_kustomization(k.name, "root", config.annotations)
       Kube::Helper::Kustomize.with_kustomize(ks) do |ks_path|
         apply_kustomize(k, ks_path)
       end
@@ -276,7 +276,7 @@ class Kube::Helper
 
       update_helm_repos if opt(:helm_repos)
 
-      ks = Kube::Helper::Kustomize.build_kustomization(nil, "root")
+      ks = Kube::Helper::Kustomize.build_kustomization(nil, "root", config.annotations)
       Kube::Helper::Kustomize.with_kustomize(ks) do |ks_path|
         check_namespaces if opt(:namespaces) || opt(:all)
         check_secrets(ks_path) if opt(:secrets) || opt(:all)

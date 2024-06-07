@@ -10,13 +10,19 @@ module Kube::Helper::Kustomize
     "resources"  => ["all.yaml"],
   }
 
-  def self.build_kustomization(name, group)
+  def self.build_kustomization(name, group, extra = nil)
+    common = {
+      "kube-helper.alpha.kubernetes.io/version" => Kube::Helper::VERSION,
+      "kube-helper.alpha.kubernetes.io/group"   => group,
+      "kube-helper.alpha.kubernetes.io/name"    => name,
+    }
+
+    unless extra.nil?
+      common.merge!(extra)
+    end
+
     HEADER.dup.merge({
-      "commonAnnotations" => {
-        "kube-helper.alpha.kubernetes.io/version" => Kube::Helper::VERSION,
-        "kube-helper.alpha.kubernetes.io/group"   => group,
-        "kube-helper.alpha.kubernetes.io/name"    => name,
-      }.reject { |_, v| v.nil? },
+      "commonAnnotations" => common.reject { |_, v| v.nil? },
     })
   end
 
