@@ -14,8 +14,8 @@ module Kube::Helper::Helm
   end
 
   # Run a helm command
-  def helm(*_args, namespace, silent : Bool = false, json : Bool = true, version : String? = nil, ks_path : String? = nil, value_files : Array(String)? = nil)
-    args = _args.to_a
+  def helm(*_args, namespace, silent : Bool = false, json : Bool = true, version : String? = nil, ks_path : String? = nil, value_files : Array(String)? = nil, readiness_args : Array(String) = [] of String)
+    args = _args.to_a + readiness_args
     args << "--namespace" << namespace
     args << "-o" << "json" if json
     args << "--version" << version unless version.nil?
@@ -43,7 +43,6 @@ module Kube::Helper::Helm
       run_cmd(helmcmd, args)
     end
   rescue ex
-    sleep 500
     raise ex
   end
 
@@ -127,8 +126,20 @@ module Kube::Helper::Helm
     end
   end
 
+  private def helm_readiness_args(options : AppOptions) : Array(String)
+    selected = [] of String
+    options.readiness_timeout if options.timeout
+    selected << "--wait" if options.wait
+    selected << "--atomic" if options.atomic
+    if timeout = options.timeout
+      selected << "--timeout" << timeout
+    end
+    selected
+  end
+
   def _run_helm(name, options : AppOptions, ks_path : String? = nil)
     logger.info { "helm app: #{name}" }
+    readiness = helm_readiness_args(options)
 
     _helm_with_chart(options) do |chart|
       if options.values.nil?
@@ -139,6 +150,7 @@ module Kube::Helper::Helm
           version: options.version,
           ks_path: ks_path,
           value_files: options.value_files,
+          readiness_args: readiness,
         )
       else
         _helm_with_values(options) do |values_path|
@@ -150,6 +162,7 @@ module Kube::Helper::Helm
             version: options.version,
             ks_path: ks_path,
             value_files: options.value_files,
+            readiness_args: readiness,
           )
         end
       end

@@ -55,13 +55,7 @@ module Kube::Helper::Kubectl
   end
 
   private def apply_server_side(path)
-    if opt(:server_side) && opt(:force_conflicts)
-      return "--server-side=true"
-    end
-
-    return "--server-side=false"
-    server_side = File.size(path) > 262144
-    "--server-side=#{server_side}"
+    "--server-side=#{opt(:server_side) == true}"
   end
 
   def apply_manifest(path : String, namespace : String, ks_path : String)

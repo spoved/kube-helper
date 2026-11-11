@@ -343,3 +343,27 @@ apps:
       # - https://raw.githubusercontent.com/minio/minio-operator/master/minio-operator.yaml
       - apps/operators/minio/operator.yml
 ```
+
+### Opt-in native readiness
+
+The `declarative-readiness-v1` capability adds application fields:
+
+```yaml
+apps:
+  - name: controller
+    namespace: controllers
+    chart: ./charts/controller.tgz
+    wait: true
+    atomic: true
+    timeout: 10m
+  - name: custom-resource-definitions
+    kustomize: ./crds
+    wait_for_crds: true
+    timeout: 180s
+```
+
+Helm receives these native flags. Kustomize waits only for the desired CRDs in
+its rendered output after successful apply; it does not enumerate live resources.
+`--dry-run` skips CRD readiness observations. Unselected callers keep existing
+behavior. Use `kube-helper --capabilities` before applying configuration which
+requires these fields. `--server-side` no longer implies force-conflicts.

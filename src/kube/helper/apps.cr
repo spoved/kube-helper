@@ -45,6 +45,7 @@ module Kube::Helper::Apps
 
   def apply_app(app : AppOptions, group_name : String = "root")
     logger.info { "applying app #{group_name}/#{app.name}" }
+    app.readiness_timeout if app.timeout || app.wait_for_crds
     if should_skip?(app)
       logger.warn { "ignoring app: #{app.name}" }
       return
@@ -89,17 +90,24 @@ module Kube::Helper::Apps
 
   # This method applies a Kustomize configuration to a given path.
   # It takes a KustomizeConfig object and the ks_path to apply the configuration to.
-  def apply_kustomize(k : KustomizeConfig, ks_path)
+  def apply_kustomize(k : KustomizeConfig, ks_path, wait_for_crds = false, timeout = "180s")
     # Get the path of the Kustomize configuration and create a temporary file to store the output.
     path = File.expand_path(k.path)
     tempfile = File.tempfile(prefix: "kustomize", suffix: nil)
 
     begin
       # Use the system command to build the Kustomize configuration and output the results to the temporary file.
-      system_cmd("kustomize build #{path} -o #{tempfile.path}")
+      run_cmd("kustomize", ["build", path, "-o", tempfile.path])
+      crds = wait_for_crds ? desired_crd_names(File.read(tempfile.path)) : [] of String
+      raise "wait_for_crds requires at least one desired CRD" if wait_for_crds && crds.empty?
 
       # Apply the configuration from the temporary file to the given path.
       apply_file(tempfile.path, ks_path)
+      if wait_for_crds && !dry_run?
+        crds.each do |name|
+          kubectl(["wait", "--for=condition=Established", "customresourcedefinition/" + name, "--timeout=" + timeout])
+        end
+      end
     ensure
       # Delete the temporary file.
       tempfile.delete
@@ -117,8 +125,18 @@ module Kube::Helper::Apps
       k = KustomizeConfig.new(
         app.name, app.namespace, app.kustomize.not_nil!
       )
-      apply_kustomize(k, ks_path)
+      apply_kustomize(k, ks_path, app.wait_for_crds, app.readiness_timeout)
     end
+  end
+
+  private def desired_crd_names(manifest : String) : Array(String)
+    YAML.parse_all(manifest).compact_map do |object|
+      next if object.raw.nil? || object["kind"]?.try(&.as_s) != "CustomResourceDefinition"
+      raise "CRD establishment requires apiextensions.k8s.io/v1" unless object["apiVersion"].as_s == "apiextensions.k8s.io/v1"
+      name = object["metadata"]["name"].as_s
+      raise "invalid desired CRD name" unless name.matches?(/\A[a-z0-9][a-z0-9.-]*[a-z0-9]\z/)
+      name
+    end.uniq.sort
   end
 
   # This method runs the 'run_before' commands specified in the application's configuration.
