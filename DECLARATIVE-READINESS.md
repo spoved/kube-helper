@@ -48,3 +48,8 @@ and opt-out/dry-run/delete behavior. Cluster's8 focused fixture checks pass,
 including native wait declarations and older-capability refusal. Both diff checks
 pass. No standalone binary build, commit, push, live or generated-k8s edit was
 performed by the worker; lead review precedes build/publication decisions.
+
+`scoped-field-manager-v1` adds a validated per-application `field_manager` for
+Kustomize apply. It continues a deliberately selected existing SSA manager while
+leaving `--force-conflicts=false` and every other application's manager
+unchanged. This is generic apply ownership, not product reconciliation.

@@ -95,6 +95,24 @@ describe "Declarative native readiness capability" do
     end
   end
 
+  it "continues an explicitly selected field manager without forcing conflicts" do
+    with_readiness_fixture do |tool, _|
+      app = AppOptions.from_yaml("name: definitions\nkustomize: ./crds\nwait_for_crds: true\nfield_manager: quantum-operator-crd\n")
+      tool.apply_kustomize(app, "foundation")
+      apply = tool.calls.find { |_, args| args.includes?("apply") }.not_nil!
+      apply[1].should contain("--field-manager=quantum-operator-crd")
+      apply[1].should contain("--force-conflicts=false")
+    end
+  end
+
+  it "rejects an invalid field manager before apply" do
+    with_readiness_fixture do |tool, _|
+      app = AppOptions.from_yaml("name: definitions\nkustomize: ./crds\nfield_manager: \"bad\\tmanager\"\n")
+      expect_raises(Exception, /field_manager requires/) { tool.apply_app(app, "foundation") }
+      tool.calls.any? { |_, args| args.includes?("apply") }.should be_false
+    end
+  end
+
   it "does no readiness observation during dry-run" do
     with_readiness_fixture do |tool, _|
       tool.dry_run = true

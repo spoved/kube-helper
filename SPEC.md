@@ -386,3 +386,16 @@ that exact namespace; omission keeps the kubectl context default used by apply,
 never app/group namespace. Services, Jobs and custom resources are not rollout
 targets. A failed rollout stops following actions/apps. Dry-run/delete skip waits.
 No live resource enumeration, product readiness checks or recovery is performed.
+
+The `scoped-field-manager-v1` capability adds an optional `field_manager` to a
+Kustomize application. When selected, kube-helper passes that validated manager
+only to that application's `kubectl apply`. This continues established
+server-side ownership without globally forcing conflicts or changing unrelated
+applications:
+
+```yaml
+apps:
+  - name: custom-resource-definitions
+    kustomize: ./crds
+    field_manager: example-crd-publisher
+```

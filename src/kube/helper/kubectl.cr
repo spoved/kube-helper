@@ -35,13 +35,15 @@ module Kube::Helper::Kubectl
     system_cmd?(self.kubecmd, (kube_args + args.to_a))
   end
 
-  def apply_file(file, ks_path : String)
+  def apply_file(file, ks_path : String, field_manager : String? = nil)
     path = File.exists?(file) ? file : get_path(file)
 
     if File.exists?(path)
       logger.debug { "applying #{file}" }
       FileUtils.cp(path, File.join(ks_path, "all.yaml"))
-      kubectl "apply", apply_server_side(path), apply_force_conflicts, "-k", ks_path
+      args = ["apply", apply_server_side(path), apply_force_conflicts]
+      args << "--field-manager=#{field_manager}" if field_manager
+      kubectl(args + ["-k", ks_path])
     else
       logger.error { "cannot find #{file}" }
     end

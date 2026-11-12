@@ -97,6 +97,17 @@ class AppOptions
   property timeout : String? = nil
   # Kustomize CRD establishment only; no product-specific readiness graph.
   property wait_for_crds : Bool = false
+  # Optional, scoped server-side apply ownership for one application. This lets
+  # a declarative bundle continue an established field manager without forcing
+  # unrelated conflicts or changing the global apply identity.
+  property field_manager : String? = nil
+
+  def validated_field_manager : String?
+    selected = field_manager
+    return nil unless selected
+    raise "field_manager requires 1-128 printable ASCII characters" unless selected.bytesize.in?(1..128) && selected.each_char.all? { |char| char.ord.in?(0x20..0x7e) }
+    selected
+  end
 
   def readiness_timeout : String
     selected = timeout || "180s"
