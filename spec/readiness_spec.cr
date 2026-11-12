@@ -105,6 +105,19 @@ describe "Declarative native readiness capability" do
     end
   end
 
+  it "forces conflicts only for the selected application" do
+    with_readiness_fixture do |tool, _|
+      forced = AppOptions.from_yaml("name: controller\nkustomize: ./controller\nforce_conflicts: true\n")
+      tool.apply_kustomize(forced, "foundation")
+      tool.calls.find { |_, args| args.includes?("apply") }.not_nil![1].should contain("--force-conflicts=true")
+
+      tool.calls.clear
+      ordinary = AppOptions.from_yaml("name: definitions\nkustomize: ./crds\n")
+      tool.apply_kustomize(ordinary, "foundation")
+      tool.calls.find { |_, args| args.includes?("apply") }.not_nil![1].should contain("--force-conflicts=false")
+    end
+  end
+
   it "rejects an invalid field manager before apply" do
     with_readiness_fixture do |tool, _|
       app = AppOptions.from_yaml("name: definitions\nkustomize: ./crds\nfield_manager: \"bad\\tmanager\"\n")

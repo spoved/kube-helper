@@ -20,6 +20,7 @@ module Kube::Helper::Args
         puts "declarative-readiness-v1"
         puts "native-rollout-v1"
         puts "scoped-field-manager-v1"
+        puts "scoped-authoritative-apply-v1"
         exit
       end
 

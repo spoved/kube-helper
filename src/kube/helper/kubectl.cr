@@ -35,13 +35,13 @@ module Kube::Helper::Kubectl
     system_cmd?(self.kubecmd, (kube_args + args.to_a))
   end
 
-  def apply_file(file, ks_path : String, field_manager : String? = nil)
+  def apply_file(file, ks_path : String, field_manager : String? = nil, force_conflicts = false)
     path = File.exists?(file) ? file : get_path(file)
 
     if File.exists?(path)
       logger.debug { "applying #{file}" }
       FileUtils.cp(path, File.join(ks_path, "all.yaml"))
-      args = ["apply", apply_server_side(path), apply_force_conflicts]
+      args = ["apply", apply_server_side(path), apply_force_conflicts(force_conflicts)]
       args << "--field-manager=#{field_manager}" if field_manager
       kubectl(args + ["-k", ks_path])
     else
@@ -49,8 +49,8 @@ module Kube::Helper::Kubectl
     end
   end
 
-  private def apply_force_conflicts
-    if opt(:force_conflicts) && opt(:server_side)
+  private def apply_force_conflicts(scoped = false)
+    if (opt(:force_conflicts) || scoped) && opt(:server_side)
       return "--force-conflicts=true"
     end
     "--force-conflicts=false"

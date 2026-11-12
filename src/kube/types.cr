@@ -101,6 +101,7 @@ class AppOptions
   # a declarative bundle continue an established field manager without forcing
   # unrelated conflicts or changing the global apply identity.
   property field_manager : String? = nil
+  property force_conflicts : Bool = false
 
   def validated_field_manager : String?
     selected = field_manager

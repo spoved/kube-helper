@@ -91,7 +91,7 @@ module Kube::Helper::Apps
 
   # This method applies a Kustomize configuration to a given path.
   # It takes a KustomizeConfig object and the ks_path to apply the configuration to.
-  def apply_kustomize(k : KustomizeConfig, ks_path, wait_for_crds = false, timeout = "180s", wait_for_rollout = false, field_manager = nil)
+  def apply_kustomize(k : KustomizeConfig, ks_path, wait_for_crds = false, timeout = "180s", wait_for_rollout = false, field_manager = nil, force_conflicts = false)
     # Get the path of the Kustomize configuration and create a temporary file to store the output.
     path = File.expand_path(k.path)
     tempfile = File.tempfile(prefix: "kustomize", suffix: nil)
@@ -105,7 +105,7 @@ module Kube::Helper::Apps
       raise "wait_for_crds requires at least one desired CRD" if wait_for_crds && crds.empty?
 
       # Apply the configuration from the temporary file to the given path.
-      apply_file(tempfile.path, ks_path, field_manager)
+      apply_file(tempfile.path, ks_path, field_manager, force_conflicts)
       if wait_for_crds && !dry_run? && opt(:delete) != true
         crds.each do |name|
           kubectl(["wait", "--for=condition=Established", "customresourcedefinition/" + name, "--timeout=" + timeout])
@@ -135,7 +135,7 @@ module Kube::Helper::Apps
       k = KustomizeConfig.new(
         app.name, app.namespace, app.kustomize.not_nil!
       )
-      apply_kustomize(k, ks_path, app.wait_for_crds, app.readiness_timeout, app.wait, app.validated_field_manager)
+      apply_kustomize(k, ks_path, app.wait_for_crds, app.readiness_timeout, app.wait, app.validated_field_manager, app.force_conflicts)
     end
   end
 

@@ -399,3 +399,9 @@ apps:
     kustomize: ./crds
     field_manager: example-crd-publisher
 ```
+
+The `scoped-authoritative-apply-v1` capability adds `force_conflicts: true` to one
+Kustomize application. It is intentionally narrower than the global CLI flag:
+only that application's server-side apply receives `--force-conflicts=true`.
+Use it when the selected desired manifest is the explicit authority for fields
+left behind by an older imperative manager.

@@ -53,3 +53,7 @@ performed by the worker; lead review precedes build/publication decisions.
 Kustomize apply. It continues a deliberately selected existing SSA manager while
 leaving `--force-conflicts=false` and every other application's manager
 unchanged. This is generic apply ownership, not product reconciliation.
+
+`scoped-authoritative-apply-v1` adds a per-application `force_conflicts` switch for
+an explicitly authoritative Kustomize manifest. It never changes unrelated
+applications and remains inert unless server-side apply is selected.

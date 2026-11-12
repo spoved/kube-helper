@@ -27,6 +27,8 @@ The `native-rollout-v1` capability supports `wait: true` for desired Kustomize
 Deployments, DaemonSets and StatefulSets using the declared timeout.
 The `scoped-field-manager-v1` capability supports a validated per-application
 `field_manager` for continuing established server-side apply ownership.
+The `scoped-authoritative-apply-v1` capability limits explicit conflict takeover to
+one Kustomize application instead of changing every apply in a run.
 
 ```text
 $ ./bin/kube-helper --help
