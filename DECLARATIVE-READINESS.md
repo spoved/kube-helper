@@ -9,7 +9,8 @@ Repository: https://github.com/spoved/kube-helper. Standalone local source clone
 Branch: `codex/declarative-reconciliation-20261111`, base v1.0.5 commit
 `ac2a42f3cb7718835c4fc6b8144ebc165f72dda3`. Owner: delegated cluster/tool worker;
 disposition active, lead owns local source handoff and any publication decision.
-No upstream push or live operation is authorized.
+The lead has explicit DEV02 installation authority. Workers remain source/test-only;
+no upstream push or publication is authorized.
 
 Application options: `wait`, `atomic`, `timeout` select native Helm flags.
 `wait_for_crds` on a Kustomize application waits for only CRD names enumerated
@@ -29,3 +30,21 @@ Validation:5 focused offline tests pass; CLI builds and --capabilities exits
 without configuration or external command execution. Diff check passes. Source
 is frozen for lead review; no commit, upstream push, publication or actual
 installation. Local binary /tmp/kube-helper-declarative is test evidence only.
+
+DEV02 readiness continuation: the lead has explicit installation authority;
+workers remain source/test-only and no upstream push/publication is authorized.
+`native-rollout-v1` extends per-app `wait: true` to desired native apps/v1
+Deployment, DaemonSet and StatefulSet rollouts after successful Kustomize apply.
+Targets are validated before applying. Explicit rendered metadata.namespace is
+authoritative; omitted namespace keeps the same kubectl context default as apply,
+without substituting app/group namespace. Timeout failures stop later actions.
+Dry-run/delete perform no rollout wait. No product CR, endpoint query, sleeps,
+retry loop or reconciliation is added. The lead reviews before binary build.
+
+Rollout continuation validation:9 focused mocked tool checks pass, including all
+three supported rollout kinds, explicit/context-default namespace selection,
+actions/app ordering, timeout and apply failure propagation, target validation,
+and opt-out/dry-run/delete behavior. Cluster's8 focused fixture checks pass,
+including native wait declarations and older-capability refusal. Both diff checks
+pass. No standalone binary build, commit, push, live or generated-k8s edit was
+performed by the worker; lead review precedes build/publication decisions.

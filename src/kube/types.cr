@@ -90,7 +90,8 @@ class AppOptions
   property namespace : String? = nil
   property values : String | Values | Nil = nil
   property value_files : Array(String)? = nil
-  # Native Helm readiness. These remain opt-in for ordinary callers.
+  # Native Helm readiness or Kustomize Deployment/DaemonSet/StatefulSet rollout.
+  # These remain opt-in for ordinary callers.
   property wait : Bool = false
   property atomic : Bool = false
   property timeout : String? = nil

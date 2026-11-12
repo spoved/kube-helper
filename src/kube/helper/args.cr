@@ -18,6 +18,7 @@ module Kube::Helper::Args
 
       parser.on("--capabilities", "Print supported opt-in capabilities and exit") do
         puts "declarative-readiness-v1"
+        puts "native-rollout-v1"
         exit
       end
 

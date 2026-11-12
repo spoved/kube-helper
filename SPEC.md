@@ -367,3 +367,22 @@ its rendered output after successful apply; it does not enumerate live resources
 `--dry-run` skips CRD readiness observations. Unselected callers keep existing
 behavior. Use `kube-helper --capabilities` before applying configuration which
 requires these fields. `--server-side` no longer implies force-conflicts.
+
+The `native-rollout-v1` capability also gives `wait: true` a native Kustomize
+meaning:
+
+```yaml
+apps:
+  - name: controller
+    kustomize: ./controller
+    wait: true
+    timeout: 10m
+```
+
+After successful apply, the tool runs native rollout status for desired apps/v1
+Deployments, DaemonSets and StatefulSets. Targets come from the rendered desired
+manifest and are validated before any apply. Explicit metadata.namespace selects
+that exact namespace; omission keeps the kubectl context default used by apply,
+never app/group namespace. Services, Jobs and custom resources are not rollout
+targets. A failed rollout stops following actions/apps. Dry-run/delete skip waits.
+No live resource enumeration, product readiness checks or recovery is performed.

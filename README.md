@@ -21,7 +21,10 @@ shards build --ignore-crystal-version
 ## Usage
 
 To use `kube-helper` you need to create a `deployment.yml` definition. See the [SPEC.md](SPEC.md) for examples and definition.
-Command line help is available via the `--help` flag.
+Command line help is available via the `--help` flag. `--capabilities` reports
+opt-in native readiness support; see [readiness options](SPEC.md#opt-in-native-readiness).
+The `native-rollout-v1` capability supports `wait: true` for desired Kustomize
+Deployments, DaemonSets and StatefulSets using the declared timeout.
 
 ```text
 $ ./bin/kube-helper --help
