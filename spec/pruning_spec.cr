@@ -293,6 +293,37 @@ describe "Scoped Kustomize pruning" do
     end
   end
 
+  it "rejects later unrecorded desired objects even with copied helper provenance" do
+    with_pruning_fixture do |tool|
+      tool.apply_kustomize(prune_app, "foundation")
+      object = tool.seed("later")
+      uid = object["metadata"]["uid"].as_s
+      tool.manifest = prune_manifest("later")
+      tool.calls.clear
+      expect_raises(Exception, /foreign or replaced prune object/) { tool.apply_kustomize(prune_app, "foundation") }
+      tool.calls.any? { |args| args.includes?("apply") || args.includes?("delete") }.should be_false
+      tool.inventory["entries"].as_a.should be_empty
+      tool.objects["v1/ConfigMap/later"]["metadata"]["uid"].as_s.should eq(uid)
+      tool.objects["v1/ConfigMap/later"]["metadata"]["annotations"][Kube::Helper::Pruning::PRUNE_OWNER]?.should be_nil
+    end
+  end
+
+  it "resumes recorded unclaimed adoption only for the same native UID" do
+    with_pruning_fixture do |tool|
+      object = tool.seed("legacy")
+      uid = object["metadata"]["uid"].as_s
+      tool.manifest = prune_manifest("legacy")
+      tool.fail_apply = true
+      expect_raises(Exception, /apply failed/) { tool.apply_kustomize(prune_app, "foundation") }
+      tool.inventory["entries"][0]["uid"].as_s.should eq(uid)
+      tool.inventory["entries"][0]["claimed"].as_bool.should be_false
+      tool.fail_apply = false
+      tool.apply_kustomize(prune_app, "foundation")
+      tool.inventory["entries"][0]["uid"].as_s.should eq(uid)
+      tool.inventory["entries"][0]["claimed"].as_bool.should be_true
+    end
+  end
+
   it "rejects replacement inventory even when its data and scope marker were copied" do
     with_pruning_fixture do |tool|
       tool.manifest = prune_manifest("old")
@@ -470,7 +501,11 @@ describe "Scoped Kustomize pruning" do
       object["metadata"].as_h["deletionTimestamp"] = JSON::Any.new("2026-11-12T00:00:00Z")
       tool.manifest = prune_manifest("keep")
       expect_raises(Exception, /target is terminating/) { tool.apply_kustomize(prune_app, "foundation") }
-      object["metadata"].as_h.delete("deletionTimestamp")
+      tool.calls.any? { |args| args.includes?("apply") || args.includes?("delete") }.should be_false
+    end
+    with_pruning_fixture do |tool|
+      object = tool.seed("keep")
+      tool.manifest = prune_manifest("keep")
       object["metadata"].as_h["ownerReferences"] = JSON.parse("[{\"uid\":\"foreign\"}]")
       expect_raises(Exception, /foreign owner references/) { tool.apply_kustomize(prune_app, "foundation") }
       tool.calls.any? { |args| args.includes?("apply") || args.includes?("delete") }.should be_false

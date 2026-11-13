@@ -124,8 +124,8 @@ module Kube::Helper::Pruning
   private def prune_owner!(object : JSON::Any, uid : String, group : String, app : String, may_adopt = false, allow_terminating = false)
     annotations = prune_annotations(object)
     owner = annotations[PRUNE_OWNER]?.try(&.as_s)
-    # First-time adoption is limited to desired objects already stamped by this
-    # exact helper application. Omitted historical objects are never discovered.
+    # Caller permits legacy adoption only during inventory initialization or
+    # same-UID unclaimed recovery. Omitted historical objects are never found.
     legacy = annotations["kube-helper.alpha.kubernetes.io/group"]?.try(&.as_s) == group && annotations["kube-helper.alpha.kubernetes.io/name"]?.try(&.as_s) == app
     raise "foreign or replaced prune object #{object["metadata"]["name"]}" unless owner == uid || (may_adopt && owner.nil? && legacy)
     raise "prune target is terminating" if !allow_terminating && object["metadata"]["deletionTimestamp"]?
@@ -228,7 +228,10 @@ module Kube::Helper::Pruning
           known = prior.find { |item| item.key == entry.key }
           owned = prune_annotations(live)[PRUNE_OWNER]?.try(&.as_s) == inventory.uid
           raise "unrecorded prune ownership #{entry.name}" if owned && (!known || known.uid != live["metadata"]["uid"].as_s)
-          prune_owner!(live, inventory.uid, group, app, may_adopt: true)
+          # Helper provenance alone cannot authorize later adoption. Recovery
+          # must already be bound to this native UID in the pending inventory.
+          may_adopt = created || known.try { |item| !item.claimed && item.uid == live["metadata"]["uid"].as_s } == true
+          prune_owner!(live, inventory.uid, group, app, may_adopt: may_adopt)
           desired[index] = PruneEntry.new(entry.kind, entry.name, live["metadata"]["uid"].as_s, owned)
         end
       end

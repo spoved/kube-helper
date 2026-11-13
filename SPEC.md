@@ -439,9 +439,13 @@ never inventoried or pruned. List containers are rejected; render individual
 objects. A kind cannot be removed from the allow-list while
 its entries remain in inventory; first remove its desired objects and apply.
 
-The first run records only current desired objects. Existing desired objects may
-be adopted only when their helper group/name annotations identify this exact
-application and they have no foreign prune ownership or owner references.
+The first run records only current desired objects. During inventory creation,
+existing desired objects may be adopted only when their helper group/name
+annotations identify this exact application and they have no foreign prune
+ownership or owner references. Later runs reject newly desired existing objects
+without recorded UIDs, even if helper annotations were copied onto them.
+Interrupted legacy adoption can resume only through an already recorded same-UID
+unclaimed inventory entry.
 Previously omitted objects are not discovered, adopted or deleted. A newly
 selected name is created with native create semantics to prevent racing foreign
 objects from being overwritten; subsequent apply includes native UID and

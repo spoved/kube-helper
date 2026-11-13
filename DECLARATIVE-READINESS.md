@@ -92,3 +92,14 @@ checks pass. Local evidence: `/private/tmp/kube-helper-pruning-spec.log`,
 27.2 object targets versus 27.0 deployment linking; tests/build both succeed.
 The lead owns independent review, source publication, DEV01 acceptance and removal
 of this task worktree/branch after integration; the original checkout is shared.
+
+Independent-review delta: legacy desired adoption is allowed only while creating
+an inventory, or for an already recorded same-native-UID unclaimed entry after
+interrupted adoption. Later newly desired existing objects are rejected even
+when their helper group/name provenance was copied. Two regression scenarios
+cover rejection and safe same-UID retry. Full specs pass 36 examples (24 pruning,
+12 readiness); CLI rebuild succeeds and reports version 1.1.0 plus all five
+capabilities without external commands. The feature release bumps shard.yml only;
+shard.lock dependencies are unchanged. Existing log/binary paths above now contain
+this final candidate. Format and diff checks pass. Lead owns review delta and
+publication; worker performed no push or live operation.
