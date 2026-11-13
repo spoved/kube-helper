@@ -6,6 +6,7 @@ class PruningFixture < Kube::Helper
   getter deletions = [] of JSON::Any
   property manifest = ""
   property dry_run = false
+  property server_side = true
   property deleting = false
   property fail_apply = false
   property fail_delete = false
@@ -24,7 +25,7 @@ class PruningFixture < Kube::Helper
   def opt(key : Symbol) : Bool | String | Nil | Array(String)
     return dry_run if key == :dry_run
     return deleting if key == :delete
-    return true if key == :server_side
+    return server_side if key == :server_side
     return "fixture" if key.in?({:kube_config, :kube_bin})
     OPTIONS[key]?
   end
@@ -241,12 +242,28 @@ describe "Scoped Kustomize pruning" do
       tool.apply_kustomize(app, "foundation")
       creates = tool.calls.select { |args| args.includes?("create") }
       creates.last.should contain("--field-manager=intent-publisher")
+      creates.last.should contain("--save-config")
       tool.calls.find { |args| args.includes?("apply") }.not_nil!.should contain("--field-manager=intent-publisher")
     end
     with_pruning_fixture do |tool|
       tool.manifest = prune_manifest("new")
       tool.apply_kustomize(prune_app, "foundation")
-      tool.calls.select { |args| args.includes?("create") }.last.should contain("--field-manager=kubectl")
+      create = tool.calls.select { |args| args.includes?("create") }.last
+      create.should contain("--field-manager=kubectl")
+      create.should contain("--save-config")
+    end
+  end
+
+  it "preserves client-side reservation and apply flags with saved configuration" do
+    with_pruning_fixture do |tool|
+      tool.server_side = false
+      tool.manifest = prune_manifest("new")
+      tool.apply_kustomize(prune_app, "foundation")
+      create = tool.calls.select { |args| args.includes?("create") }.last
+      create.should contain("--field-manager=kubectl-client-side-apply")
+      create.should contain("--save-config")
+      tool.calls.find { |args| args.includes?("apply") }.not_nil!.should contain("--server-side=false")
+      tool.calls.any? { |args| args.includes?("--force-conflicts=true") }.should be_false
     end
   end
 

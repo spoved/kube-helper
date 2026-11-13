@@ -449,9 +449,12 @@ unclaimed inventory entry.
 Previously omitted objects are not discovered, adopted or deleted. A newly
 selected name is created with native create semantics to prevent racing foreign
 objects from being overwritten; subsequent apply includes native UID and
-resourceVersion guards. Reservation create uses the selected apply field manager
-(or kubectl's corresponding native default) so it does not introduce a separate
-field owner. Every tracked live object is bound to its exact UID and
+resourceVersion guards. Reservation create uses `--save-config` with the selected
+apply field manager (or kubectl's corresponding native default). The saved
+last-applied annotation enables kubectl's native migration of reservation Update
+ownership into Apply ownership, including custom managers; matching manager text
+alone does not migrate the distinct managedFields operation entries. Client-side
+apply uses the same saved configuration normally. Every tracked live object is bound to its exact UID and
 the inventory's native UID. Inventory replacement, copied inventory data,
 foreign ownership, replacement targets and conflicting concurrent updates stop
 the invocation. The prune ownership/scope/lock annotations are reserved.

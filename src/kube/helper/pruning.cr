@@ -105,12 +105,13 @@ module Kube::Helper::Pruning
     metadata["annotations"] ||= JSON.parse("{}")
   end
 
-  private def prune_file_command(verb : String, object : JSON::Any, field_manager : String? = nil) : JSON::Any
+  private def prune_file_command(verb : String, object : JSON::Any, field_manager : String? = nil, save_config = false) : JSON::Any
     file = File.tempfile("kube-helper-inventory", ".json")
     begin
       File.write(file.path, object.to_json)
       args = [verb, "-f", file.path, "-o", "json"]
       args << "--field-manager=#{field_manager}" if field_manager
+      args << "--save-config" if save_config
       JSON.parse(prune_kubectl(args)[:output])
     ensure
       file.delete
@@ -259,11 +260,12 @@ module Kube::Helper::Pruning
           # Reserve an absent name with create, never an unguarded apply which
           # could overwrite a foreign object created since the preflight read.
           object = prune_fence(options, object, inventory)
-          # Match kubectl apply's native default manager, avoiding an extra
-          # kubectl-create owner which would conflict on the next changed apply.
-          # kubernetes/kubectl pkg/cmd/apply/apply.go:GetApplyFieldManagerFlag
+          # Save last-applied data so kubectl can migrate this reservation's
+          # Update managedFields into Apply ownership, even with a custom
+          # manager. Equal manager text alone does not merge operation entries.
+          # kubernetes/kubectl pkg/cmd/apply/apply.go:migrateToSSAIfNecessary
           manager = field_manager || (opt(:server_side) == true ? "kubectl" : "kubectl-client-side-apply")
-          live = prune_file_command("create", document, manager)
+          live = prune_file_command("create", document, manager, save_config: true)
           desired[index] = PruneEntry.new(kind, name, live["metadata"]["uid"].as_s, true)
           inventory.entries = prior.reject { |old| desired.any? { |item| item.key == old.key } } + desired
           object = prune_save(options, object, inventory)

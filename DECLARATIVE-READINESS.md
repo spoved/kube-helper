@@ -103,3 +103,15 @@ capabilities without external commands. The feature release bumps shard.yml only
 shard.lock dependencies are unchanged. Existing log/binary paths above now contain
 this final candidate. Format and diff checks pass. Lead owns review delta and
 publication; worker performed no push or live operation.
+
+Native-review correction: the lead's disposable ConfigMap experiment demonstrated
+that equal field-manager text does not migrate creation Update managedFields into
+Apply ownership: a subsequent changed SSA conflicted. Reservation create now
+uses native `--save-config` with its intended manager so kubectl can discover the
+last-applied owner and perform its supported Update-to-Apply migration. It adds
+no global force or managedFields clearing. Offline flag coverage includes default
+SSA, custom SSA manager and client-side apply; full specs pass 37 examples (25
+pruning, 12 readiness), and the v1.1.0 CLI rebuild passes. Native default/custom/
+client-side changed-apply validation remains owned by the lead; these mocked
+specs do not establish native managedFields semantics. Format/diff checks pass;
+existing local log/binary paths contain this candidate. No worker live writes.
