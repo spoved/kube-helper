@@ -12,9 +12,8 @@ module Kube::Helper::Kustomize
 
   def self.build_kustomization(name, group, extra = nil)
     common = {
-      "kube-helper.alpha.kubernetes.io/version" => Kube::Helper::VERSION,
-      "kube-helper.alpha.kubernetes.io/group"   => group,
-      "kube-helper.alpha.kubernetes.io/name"    => name,
+      "kube-helper.alpha.kubernetes.io/group" => group,
+      "kube-helper.alpha.kubernetes.io/name"  => name,
     }
 
     unless extra.nil?
@@ -26,7 +25,7 @@ module Kube::Helper::Kustomize
     })
   end
 
-  def self.with_kustomize(kustomize, *paths)
+  def self.with_kustomize(kustomize, *paths, &)
     config = kustomize.dup
     temp_dir = File.tempname(prefix: "kube-helper-kustomize", suffix: nil)
 

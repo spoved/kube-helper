@@ -115,3 +115,24 @@ pruning, 12 readiness), and the v1.1.0 CLI rebuild passes. Native default/custom
 client-side changed-apply validation remains owned by the lead; these mocked
 specs do not establish native managedFields semantics. Format/diff checks pass;
 existing local log/binary paths contain this candidate. No worker live writes.
+
+
+November12 stable metadata correction: task-owned worktree
+`/Volumes/data/codex/quantum/worktrees/kube-helper-stable-metadata-20261112`, branch
+`codex/stable-apply-metadata-20261112`, base origin/master ce223fb, owner
+helper_pruning, disposition active pending lead review/integration and cleanup.
+The lead observed a native nonforcing CRD apply conflict when the automatically
+stamped binary version changed across helper releases. Version 1.1.1 removes that
+automatic annotation from generated Kustomize wrappers while retaining stable
+group/name provenance and caller annotations. Binary version remains available
+through `--version`; no ownership reader depends on the removed annotation.
+The worker stays source/test-only; the lead owns publication and DEV01 rollout.
+
+Stable metadata validation: full `crystal spec` passes 39 examples, including two
+new regressions requiring exact stable app/group annotation keys and preserving
+explicit caller metadata. The CLI builds and reports 1.1.1 plus all five existing
+capabilities without external commands. Format/diff checks pass; shard.lock is
+unchanged. Local binary `/private/tmp/kube-helper-stable-metadata`; evidence logs
+`/private/tmp/kube-helper-stable-metadata-spec.log` and
+`/private/tmp/kube-helper-stable-metadata-build.log`. Native rollout/acceptance
+remains the lead's separate stage; no worker live or publication activity.
