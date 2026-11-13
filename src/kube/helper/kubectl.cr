@@ -35,33 +35,30 @@ module Kube::Helper::Kubectl
     system_cmd?(self.kubecmd, (kube_args + args.to_a))
   end
 
-  def apply_file(file, ks_path : String)
+  def apply_file(file, ks_path : String, field_manager : String? = nil, force_conflicts = false, request_timeout : String? = nil)
     path = File.exists?(file) ? file : get_path(file)
 
     if File.exists?(path)
       logger.debug { "applying #{file}" }
       FileUtils.cp(path, File.join(ks_path, "all.yaml"))
-      kubectl "apply", apply_server_side(path), apply_force_conflicts, "-k", ks_path
+      args = ["apply", apply_server_side(path), apply_force_conflicts(force_conflicts)]
+      args << "--field-manager=#{field_manager}" if field_manager
+      args << "--request-timeout=#{request_timeout}" if request_timeout
+      kubectl(args + ["-k", ks_path])
     else
       logger.error { "cannot find #{file}" }
     end
   end
 
-  private def apply_force_conflicts
-    if opt(:force_conflicts) && opt(:server_side)
+  private def apply_force_conflicts(scoped = false)
+    if (opt(:force_conflicts) || scoped) && opt(:server_side)
       return "--force-conflicts=true"
     end
     "--force-conflicts=false"
   end
 
   private def apply_server_side(path)
-    if opt(:server_side) && opt(:force_conflicts)
-      return "--server-side=true"
-    end
-
-    return "--server-side=false"
-    server_side = File.size(path) > 262144
-    "--server-side=#{server_side}"
+    "--server-side=#{opt(:server_side) == true}"
   end
 
   def apply_manifest(path : String, namespace : String, ks_path : String)

@@ -90,6 +90,33 @@ class AppOptions
   property namespace : String? = nil
   property values : String | Values | Nil = nil
   property value_files : Array(String)? = nil
+  # Native Helm readiness or Kustomize Deployment/DaemonSet/StatefulSet rollout.
+  # These remain opt-in for ordinary callers.
+  property wait : Bool = false
+  property atomic : Bool = false
+  property timeout : String? = nil
+  # Kustomize CRD establishment only; no product-specific readiness graph.
+  property wait_for_crds : Bool = false
+  # Optional, scoped server-side apply ownership for one application. This lets
+  # a declarative bundle continue an established field manager without forcing
+  # unrelated conflicts or changing the global apply identity.
+  property field_manager : String? = nil
+  property force_conflicts : Bool = false
+  property prune : PruneOptions? = nil
+
+  def validated_field_manager : String?
+    selected = field_manager
+    return nil unless selected
+    raise "field_manager requires 1-128 printable ASCII characters" unless selected.bytesize.in?(1..128) && selected.each_char.all? { |char| char.ord.in?(0x20..0x7e) }
+    selected
+  end
+
+  def readiness_timeout : String
+    selected = timeout || "180s"
+    raise "timeout requires a positive native duration" unless selected.bytesize <= 128 && selected.matches?(/\A(?:[0-9]+(?:ms|s|m|h))+\z/) && selected.matches?(/[1-9]/)
+    selected
+  end
+
   property secrets : Array(Secret) = Array(Secret).new
   property config_maps : Array(Secret) = Array(Secret).new
 
@@ -136,4 +163,14 @@ class FileElement
 
   property name : String
   property path : String
+end
+
+# Explicitly scoped native inventory; custom resources are never prune targets.
+class PruneOptions
+  include JSON::Serializable
+  include YAML::Serializable
+
+  property namespace : String
+  property inventory : String
+  property kinds : Array(String)
 end

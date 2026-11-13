@@ -44,6 +44,7 @@ class Kube::Helper
   include Kube::Helper::Args
   include Kube::Helper::Kubectl
   include Kube::Helper::Secrets
+  include Kube::Helper::Pruning
   include Kube::Helper::Apps
   include Kube::Helper::Helm
   include Kube::Helper::Group

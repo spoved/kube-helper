@@ -327,6 +327,45 @@
                 "items": {
                   "type": "string"
                 }
+              },
+              "prune": {
+                "type": "object",
+                "required": [
+                  "namespace",
+                  "inventory",
+                  "kinds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "namespace": {
+                    "type": "string"
+                  },
+                  "inventory": {
+                    "type": "string"
+                  },
+                  "kinds": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "v1/ConfigMap",
+                        "v1/Service",
+                        "v1/ServiceAccount",
+                        "apps/v1/Deployment",
+                        "apps/v1/DaemonSet",
+                        "apps/v1/StatefulSet",
+                        "batch/v1/Job",
+                        "batch/v1/CronJob",
+                        "rbac.authorization.k8s.io/v1/Role",
+                        "rbac.authorization.k8s.io/v1/RoleBinding",
+                        "networking.k8s.io/v1/NetworkPolicy",
+                        "policy/v1/PodDisruptionBudget"
+                      ]
+                    }
+                  }
+                }
               }
             }
           }
@@ -623,6 +662,45 @@
                       "type": "array",
                       "items": {
                         "type": "string"
+                      }
+                    },
+                    "prune": {
+                      "type": "object",
+                      "required": [
+                        "namespace",
+                        "inventory",
+                        "kinds"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "namespace": {
+                          "type": "string"
+                        },
+                        "inventory": {
+                          "type": "string"
+                        },
+                        "kinds": {
+                          "type": "array",
+                          "minItems": 1,
+                          "uniqueItems": true,
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "v1/ConfigMap",
+                              "v1/Service",
+                              "v1/ServiceAccount",
+                              "apps/v1/Deployment",
+                              "apps/v1/DaemonSet",
+                              "apps/v1/StatefulSet",
+                              "batch/v1/Job",
+                              "batch/v1/CronJob",
+                              "rbac.authorization.k8s.io/v1/Role",
+                              "rbac.authorization.k8s.io/v1/RoleBinding",
+                              "networking.k8s.io/v1/NetworkPolicy",
+                              "policy/v1/PodDisruptionBudget"
+                            ]
+                          }
+                        }
                       }
                     }
                   }

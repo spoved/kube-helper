@@ -16,6 +16,15 @@ module Kube::Helper::Args
         exit
       end
 
+      parser.on("--capabilities", "Print supported opt-in capabilities and exit") do
+        puts "declarative-readiness-v1"
+        puts "native-rollout-v1"
+        puts "scoped-field-manager-v1"
+        puts "scoped-authoritative-apply-v1"
+        puts "scoped-kustomize-prune-v1"
+        exit
+      end
+
       parser.on("--version", "Print version and exit") do
         puts Kube::Helper::VERSION
         exit

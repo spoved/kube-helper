@@ -21,7 +21,14 @@ shards build --ignore-crystal-version
 ## Usage
 
 To use `kube-helper` you need to create a `deployment.yml` definition. See the [SPEC.md](SPEC.md) for examples and definition.
-Command line help is available via the `--help` flag.
+Command line help is available via the `--help` flag. `--capabilities` reports
+opt-in native readiness support; see [readiness options](SPEC.md#opt-in-native-readiness).
+The `native-rollout-v1` capability supports `wait: true` for desired Kustomize
+Deployments, DaemonSets and StatefulSets using the declared timeout.
+The `scoped-field-manager-v1` capability supports a validated per-application
+`field_manager` for continuing established server-side apply ownership.
+The `scoped-authoritative-apply-v1` capability limits explicit conflict takeover to
+one Kustomize application instead of changing every apply in a run.
 
 ```text
 $ ./bin/kube-helper --help
@@ -114,3 +121,11 @@ When processing `groups` or `apps` it will process sub items in order (top to bo
 ## Contributors
 
 - [Holden Omans](https://github.com/kalinon) - creator and maintainer
+
+Version 1.1.0 introduces the generic readiness, scoped apply ownership and
+inventory pruning capabilities. Require the relevant `--capabilities` output
+before relying on an option.
+
+The `scoped-kustomize-prune-v1` capability provides explicit per-application,
+namespace-scoped native inventory pruning. See [pruning configuration and
+recovery](SPEC.md#opt-in-scoped-kustomize-pruning) before opting in.
