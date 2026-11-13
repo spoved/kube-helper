@@ -129,3 +129,7 @@ before relying on an option.
 The `scoped-kustomize-prune-v1` capability provides explicit per-application,
 namespace-scoped native inventory pruning. See [pruning configuration and
 recovery](SPEC.md#opt-in-scoped-kustomize-pruning) before opting in.
+
+Version 1.1.1 keeps generated helper provenance stable across binary upgrades:
+Kustomize wrappers include group/name annotations without an automatic binary
+version annotation. CLI `--version` continues to report the installed version.
