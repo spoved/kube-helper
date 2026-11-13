@@ -21,6 +21,7 @@ module Kube::Helper::Args
         puts "native-rollout-v1"
         puts "scoped-field-manager-v1"
         puts "scoped-authoritative-apply-v1"
+        puts "scoped-kustomize-prune-v1"
         exit
       end
 

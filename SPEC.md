@@ -405,3 +405,91 @@ Kustomize application. It is intentionally narrower than the global CLI flag:
 only that application's server-side apply receives `--force-conflicts=true`.
 Use it when the selected desired manifest is the explicit authority for fields
 left behind by an older imperative manager.
+
+### Opt-in scoped Kustomize pruning
+
+`scoped-kustomize-prune-v1` adds `prune` to a Kustomize application:
+
+```yaml
+apps:
+  - name: intent
+    kustomize: ./intent
+    prune:
+      namespace: controllers
+      inventory: helper-intent-inventory
+      kinds: [v1/ConfigMap]
+```
+
+`namespace`, `inventory` and a nonempty `kinds` list are required. Every desired
+object of a selected kind must explicitly declare this namespace. The inventory
+ConfigMap is separate from the desired manifest and must not be a target. Keep
+its name, namespace and application/group identity stable. Pruning applies only
+to that application's Kustomize output, excluding `before`, `after`, standalone
+manifests, other apps and Helm. Removing an entire app does not execute it; keep
+the app with an empty rendered desired set to prune its remaining tracked objects.
+
+Supported explicit native kinds are `v1/ConfigMap`, `v1/Service`,
+`v1/ServiceAccount`, `apps/v1/Deployment`, `apps/v1/DaemonSet`,
+`apps/v1/StatefulSet`, `batch/v1/Job`, `batch/v1/CronJob`,
+`rbac.authorization.k8s.io/v1/Role`, `rbac.authorization.k8s.io/v1/RoleBinding`,
+`networking.k8s.io/v1/NetworkPolicy` and `policy/v1/PodDisruptionBudget`.
+There is no default prune kind. Secrets, Tenant/custom resources, namespaces and
+persistent storage are unsupported. Unselected kinds are applied normally and
+never inventoried or pruned. List containers are rejected; render individual
+objects. A kind cannot be removed from the allow-list while
+its entries remain in inventory; first remove its desired objects and apply.
+
+The first run records only current desired objects. Existing desired objects may
+be adopted only when their helper group/name annotations identify this exact
+application and they have no foreign prune ownership or owner references.
+Previously omitted objects are not discovered, adopted or deleted. A newly
+selected name is created with native create semantics to prevent racing foreign
+objects from being overwritten; subsequent apply includes native UID and
+resourceVersion guards. Reservation create uses the selected apply field manager
+(or kubectl's corresponding native default) so it does not introduce a separate
+field owner. Every tracked live object is bound to its exact UID and
+the inventory's native UID. Inventory replacement, copied inventory data,
+foreign ownership, replacement targets and conflicting concurrent updates stop
+the invocation. The prune ownership/scope/lock annotations are reserved.
+
+The helper persists the union of prior and desired identities before apply.
+Stale deletion starts only after desired apply and exact identity verification
+succeed. Empty successfully rendered output is a successful empty desired set;
+no invalid empty `kubectl apply` command is issued. Deletes name individual
+objects and submit native UID plus resourceVersion preconditions. No selectors
+or live resource lists are used. The final inventory retains desired UIDs and stale UIDs still awaiting native
+absence.
+Deletion may initiate Kubernetes finalizers; this capability does not wait for
+or repair finalization. Exact owned stale objects already terminating are
+retained in inventory without repeated DELETE. Accepted deletes remain tracked
+until an exact read observes native absence, including on subsequent runs.
+Failed deletion commands remain in the pending inventory for a later retry.
+
+A bounded inventory lease serializes writers for 120 seconds and is renewed by
+native UID/resourceVersion/token compare-and-swap before every mutation and after
+apply. Prune API requests use a 30-second request timeout. Command failures
+preserve pending state and release the lease; killed processes expire without
+manual lock removal. A busy invocation fails with a retry message; a later run
+can acquire an expired lease. Lease takeover fences the previous writer before
+stale deletion, including an apply completing after its lease expired. Every
+target apply/delete additionally uses native UID/resourceVersion guards.
+Kubernetes has no atomic transaction across the inventory and target objects:
+a process paused between a lease check and a target request can still issue that
+already-prepared request. Target preconditions reject intervening target changes;
+this lease does not provide server-enforced cross-object fencing.
+
+A crash between creating an object and recording its returned UID fails closed
+on retry with an `uncommitted prune creation` error. This narrow failure window
+requires inspecting the named object and inventory and explicitly restoring the
+verified UID, or removing the uncommitted created object. Copied ownership
+annotations never authorize recovery. Ordinary interrupted applies and deletions
+retry through the durable inventory after the lease expires.
+A crash during initial inventory creation can leave uninitialized data; verify
+that it has no recorded resources before explicitly deleting that inventory and
+retrying. Never remove a populated inventory to bypass ownership checks.
+
+`--dry-run` validates and client-dry-runs desired output without inventory reads,
+locks, ownership claims or deletions. Empty output is a no-op. `--delete` is
+rejected for prune-enabled apps; apply an empty desired set instead. Callers
+without `prune` retain their existing behavior. Require the capability before
+using this configuration.

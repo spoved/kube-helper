@@ -35,7 +35,7 @@ module Kube::Helper::Kubectl
     system_cmd?(self.kubecmd, (kube_args + args.to_a))
   end
 
-  def apply_file(file, ks_path : String, field_manager : String? = nil, force_conflicts = false)
+  def apply_file(file, ks_path : String, field_manager : String? = nil, force_conflicts = false, request_timeout : String? = nil)
     path = File.exists?(file) ? file : get_path(file)
 
     if File.exists?(path)
@@ -43,6 +43,7 @@ module Kube::Helper::Kubectl
       FileUtils.cp(path, File.join(ks_path, "all.yaml"))
       args = ["apply", apply_server_side(path), apply_force_conflicts(force_conflicts)]
       args << "--field-manager=#{field_manager}" if field_manager
+      args << "--request-timeout=#{request_timeout}" if request_timeout
       kubectl(args + ["-k", ks_path])
     else
       logger.error { "cannot find #{file}" }

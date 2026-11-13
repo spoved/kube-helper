@@ -102,6 +102,7 @@ class AppOptions
   # unrelated conflicts or changing the global apply identity.
   property field_manager : String? = nil
   property force_conflicts : Bool = false
+  property prune : PruneOptions? = nil
 
   def validated_field_manager : String?
     selected = field_manager
@@ -162,4 +163,14 @@ class FileElement
 
   property name : String
   property path : String
+end
+
+# Explicitly scoped native inventory; custom resources are never prune targets.
+class PruneOptions
+  include JSON::Serializable
+  include YAML::Serializable
+
+  property namespace : String
+  property inventory : String
+  property kinds : Array(String)
 end

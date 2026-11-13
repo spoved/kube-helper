@@ -121,3 +121,7 @@ When processing `groups` or `apps` it will process sub items in order (top to bo
 ## Contributors
 
 - [Holden Omans](https://github.com/kalinon) - creator and maintainer
+
+The `scoped-kustomize-prune-v1` capability provides explicit per-application,
+namespace-scoped native inventory pruning. See [pruning configuration and
+recovery](SPEC.md#opt-in-scoped-kustomize-pruning) before opting in.

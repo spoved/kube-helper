@@ -57,3 +57,38 @@ unchanged. This is generic apply ownership, not product reconciliation.
 `scoped-authoritative-apply-v1` adds a per-application `force_conflicts` switch for
 an explicitly authoritative Kustomize manifest. It never changes unrelated
 applications and remains inert unless server-side apply is selected.
+
+November12 scoped pruning continuation: current user authority supersedes the
+historical publication/DEV02-only hold for the lead; the worker remains source
+only. Task-owned worktree:
+`/Volumes/data/codex/quantum/worktrees/kube-helper-pruning-20261112`, branch
+`codex/scoped-kustomize-pruning-20261112`, base b711188, owner helper_pruning,
+disposition active pending lead integration and cleanup. The original source
+checkout remains shared and untouched. Requested finish line: opt-in generic
+per-app inventory pruning, required source tests/review, lead publication and
+DEV01 installation/acceptance. No worker live writes or push.
+
+`scoped-kustomize-prune-v1` uses a namespaced ConfigMap inventory bound to its
+native UID, exact per-object UID/resourceVersion protection, durable pending
+state and a bounded 120-second serialization lease with CAS fencing. Only explicitly selected supported
+native namespaced kinds are tracked; custom resources, Tenant, Secrets and
+persistent storage are excluded. Successful desired apply precedes stale
+removal; empty desired sets are supported. Initial inventory covers current
+desired objects only. See SPEC.md for failure, interruption, dry-run, delete and
+explicit recovery semantics. The capability does not perform product-level
+reconciliation or historical discovery.
+
+Pruning validation: full `crystal spec` passes 34 examples (22 scoped pruning,
+12 existing readiness), covering desired initialization/omission/empty sets,
+legacy provenance, create/apply/delete races and failures, UID-bound inventory
+and target replacement, pending/expired/concurrent lease fencing, finalization
+retention, scoped field managers, dry-run/delete, excluded custom resources and
+ordinary opt-out behavior. CLI builds successfully; with PATH unavailable,
+`--capabilities` exits without configuration/external commands and prints the
+new capability alongside all existing ones. Format, JSON schema syntax and diff
+checks pass. Local evidence: `/private/tmp/kube-helper-pruning-spec.log`,
+`/private/tmp/kube-helper-pruning-build.log`; local binary:
+`/private/tmp/kube-helper-pruning`. Compiler link warnings concern local macOS
+27.2 object targets versus 27.0 deployment linking; tests/build both succeed.
+The lead owns independent review, source publication, DEV01 acceptance and removal
+of this task worktree/branch after integration; the original checkout is shared.
